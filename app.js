@@ -11,6 +11,10 @@ const express = require("express"),
   methodOverride = require("method-override"),
   app = express();
 
+  var cors = require('cors');
+
+
+
 const  loginRouter = require("./routes/login"),
   solicitacoesRouter = require("./routes/solicitacoes"),
   produtosRouter = require("./routes/produtos"),
@@ -22,6 +26,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
+app.use(cors());
+ 
 
 //passport config
 app.use(
@@ -51,7 +57,7 @@ models.sequelize
   .sync()
   .then(() => {
     console.log("Nice! Database looks fine");
-    app.listen(3000, function(err) {
+    app.listen(3001, function(err) {
       if (!err) console.log("The server has started!");
       else console.log(err);
     });

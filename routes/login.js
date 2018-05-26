@@ -27,21 +27,22 @@ router.post("/signup",
 );
 
 
+
 router.post("/login",
   passport.authenticate("local-signin", {
-    failureRedirect: "/login"
+    failureRedirect: "/"
   }), (req,res) =>{
+    console.log("post")
     const usuario = {
       id : req.user.id,
       nome : req.user.nome
     }
     var token = jwt.sign({ usuario }, 'secretkey', (err,token) =>{
-      res.json({
-        token : token
-      })
+      res.send(token)
     });
   }
 );
+
 
 router.get("/logout", (req, res) => {
   req.session.destroy(err => {
