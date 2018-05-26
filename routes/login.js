@@ -3,6 +3,7 @@ var router = express.Router();
 var models = require("../models");
 var passport = require("passport");
 var middleware = require("../middleware");
+var jwt = require('jsonwebtoken');
 
 // Front ?
 // router.get("/signup", (req, res) => {
@@ -13,12 +14,9 @@ var middleware = require("../middleware");
 // router.get("/login", (req, res) => {
 //   res.render("autenticacao/login");
 // });
-
-router.get("/", middleware.isLoggedIn, (req, res) => {
-  if(req.user.adm)
-    res.redirect("/requisicoes");
-  else
-    res.redirect("/solicitacoes");
+router.get("/", (req, res) => {
+  res.send("padrao")
+  
 })
 
 router.post("/signup",
@@ -31,9 +29,18 @@ router.post("/signup",
 
 router.post("/login",
   passport.authenticate("local-signin", {
-    successRedirect: "/requisicoes",
     failureRedirect: "/login"
-  })
+  }), (req,res) =>{
+    const usuario = {
+      id : req.user.id,
+      nome : req.user.nome
+    }
+    var token = jwt.sign({ usuario }, 'secretkey', (err,token) =>{
+      res.json({
+        token : token
+      })
+    });
+  }
 );
 
 router.get("/logout", (req, res) => {
