@@ -3,10 +3,11 @@ var router = express.Router();
 var models = require("../models");
 var Sequelize = require('sequelize');
 const Op = Sequelize.Op;
-const isLoggedInAdm = require("../middleware/index").isLoggedInAdm;
+//const isLoggedInAdm = require("../middleware/index").isLoggedInAdm;
+const verifyTokenAdm = require("../middleware/index").verifyTokenAdm;
 
 // LISTAR ok
-router.get("/", (req, res) => {
+router.get("/",verifyTokenAdm, (req, res) => {
     models.requisicoes
         .findAll({
             include: [{
@@ -17,23 +18,57 @@ router.get("/", (req, res) => {
             where : {status : 'VALIDA'}
         })
         .then(requisicoes => {
-            res.status(200).json(requisicoes);
+         let lista = [];
+        requisicoes.forEach(function (element) {
+          lista.push({
+            solicitante: element.usuario.nome,
+            nome:element.nome,
+            numero: element.numero,
+            id: element.id
+          })
+
+        });
+        res.status(200).json(lista);
         })
         .catch(err => { res.status(400).send(err) })
 });
 
 // CRIAR ok
-router.post("/", (req, res) => {
-    models.requisicoes
-        .create({
-            usuario_id: req.user.id,
-            nome: req.body.nome,
-            status: "VALIDA"
+router.post("/",verifyTokenAdm, (req, res) => {
+    console.log("entrei")
+      models.requisicoes.create({ usuario_id: req.dados.usuario.id, status: "VALIDA", nome: req.body.nome }).then((_requisicao) => {
+        let id_requisicao = _requisicao.id;
+        let lista = []
+        req.body.solicitacoes.forEach(function (idSolicitacoes) {
+            lista.push({
+                requisicao_id: id_requisicao,
+                solicitacao_id: idSolicitacoes,
+            })
+        });
+        models.solicitacao_requisicao.bulkCreate(lista).then((lista) => {
+            res.status(201).send("Requisicao criada");
+
+        }).catch(ex => {
+            res.status(400).send('Não foi possível associar a solicitação com a requisicão ' +
+                'no banco de dados.');
         })
-        .then(requisicao => {
-            res.status(201).json(requisicao);
+    }).catch(ex => {
+        console.error(ex);
+        res.status(400).send('Não foi possível incluir a requisicao ' +
+            'no banco de dados.');
+    });
+
+    models.solicitacoes.update({
+        status: "REQUISITADO",
+    }, {
+            where: {
+                id: {
+                    [Op.in]: req.body.solicitacoes
+                }
+            }
+        }).then(() => {
+            console.log('atualizado');
         })
-        .catch(err => { res.status(400).send(err) })
 });
 
 // MOSTRAR ok
@@ -82,6 +117,8 @@ router.delete("/:id", (req, res) => {
 });
 
 // ADD SOLICITAÇÃO(ÕES) ok
+
+/*
 router.post("/:id/solicitacoes", (req, res) => {
     let lista = []
     let solicitacoes = req.body.solicitacoes;
@@ -98,7 +135,7 @@ router.post("/:id/solicitacoes", (req, res) => {
         })
         .catch(err => { res.status(400).send(err) })
 });
-
+*/
 // REMOVER SOLICITAÇÃO ok mas tem que arrumar.
 // acho q vai ficar dificil excluir pelo id da tabela de solicitacao_requisicao
 // tem q fazer outro select

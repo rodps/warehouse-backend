@@ -32,13 +32,17 @@ router.post("/login",
   passport.authenticate("local-signin", {
     failureRedirect: "/"
   }), (req,res) =>{
-    console.log("post")
     const usuario = {
       id : req.user.id,
-      nome : req.user.nome
+      nome : req.user.nome,
+      adm : req.user.adm
     }
     var token = jwt.sign({ usuario }, 'secretkey', (err,token) =>{
-      res.send(token)
+      const ret = {
+        token : token,
+        isAdm : req.user.adm
+      }
+      res.status(201).json(ret)
     });
   }
 );

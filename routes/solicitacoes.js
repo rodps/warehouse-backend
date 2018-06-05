@@ -3,8 +3,67 @@ var router = express.Router();
 var models = require("../models");
 var Sequelize = require("sequelize");
 const isLoggedIn = require("../middleware/index").isLoggedIn;
+const verifyToken = require("../middleware/index").verifyToken;
 
 // LISTAR ok
+router.get("/", verifyToken, (req, res) => {
+
+  //ADMINISTRADOR REQUISITA TODAS SOLICITACÕES 
+  if (req.dados.usuario.adm) {
+    models.solicitacoes
+      .findAll({
+        include: [{
+          model: models.usuarios,
+          where: { id: Sequelize.col('usuario_id') },
+          attributes: ['nome']
+        }],
+        where: { [Sequelize.Op.or]: [{ status: "ABERTO" }, { status: "DESERTO" }] }
+      })
+      .then(solicitacoes => {
+        let lista = [];
+        solicitacoes.forEach(function (element) {
+          lista.push({
+            nome: element.usuario.nome,
+            descricao: element.descricao,
+            status: element.status,
+            justificativa: element.justificativa,
+            id: element.id
+          })
+
+        });
+        res.status(200).json(lista);
+      })
+  } else { //Usuario comun então apenas é mostrado as suas solicitações
+    models.solicitacoes
+      .findAll({
+        where: { usuario_id: req.dados.usuario.id }
+      })
+      .then(solicitacoes => {
+        res.status(200).json(solicitacoes);
+      })
+  }
+});
+
+// CRIAR ok
+router.post("/", verifyToken, (req, res) => {
+
+  models.solicitacoes
+    .create({
+      status: "ABERTO",
+      descricao: req.body.descricao,
+      justificativa: req.body.justificativa,
+      quantidade: req.body.quantidade,
+      usuario_id: req.dados.usuario.id
+    })
+    .then(solicitacao => {
+      res.status(201).json(solicitacao);
+    })
+    .catch(err => { res.status(400).send(err) })
+});
+
+
+
+/*
 router.get("/", (req, res) => {
   models.solicitacoes
     .findAll({
@@ -16,21 +75,7 @@ router.get("/", (req, res) => {
     .catch(err => { res.status(400).send(err) })
 });
 
-// CRIAR ok
-router.post("/", (req, res) => {
-  models.solicitacoes
-    .create({
-      status: "ABERTO",
-      descricao: req.body.descricao,
-      justificativa: req.body.justificativa,
-      quantidade: req.body.quantidade,
-      usuario_id: req.user.id
-    })
-    .then(solicitacao => {
-      res.status(201).json(solicitacao);
-    })
-    .catch(err => { res.status(400).send(err) })
-});
+
 
 // MOSTRAR ok
 router.get("/:id", (req, res) => {
@@ -123,5 +168,6 @@ router.delete("/:id/orcamentos/:idOrcamento", (req, res) => {
     })
   .catch(err => { res.status(400).send(err) })
 });
+*/
 
 module.exports = router;
