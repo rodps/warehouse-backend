@@ -5,6 +5,43 @@ var Sequelize = require("sequelize");
 const isLoggedIn = require("../middleware/index").isLoggedIn;
 const verifyToken = require("../middleware/index").verifyToken;
 
+
+//Validar solicitacoes
+router.get("/validar", verifyToken, (req, res) => {
+
+  //ADMINISTRADOR REQUISITA TODAS SOLICITACÕES 
+  if (req.dados.usuario.adm) {
+    models.solicitacoes
+      .findAll({
+        include: [{
+          model: models.usuarios,
+          where: { id: Sequelize.col('usuario_id') },
+          attributes: ['nome']
+        }],
+        where: { [Sequelize.Op.or]: [{ status: "ABERTO" }] }
+      })
+      .then(solicitacoes => {
+        let lista = [];
+        solicitacoes.forEach(function (element) {
+          lista.push({
+            nome: element.usuario.nome,
+            descricao: element.descricao,
+            status: element.status,
+            justificativa: element.justificativa,
+            id: element.id,
+            data : element.createdAt,
+            quantidade : element.quantidade
+          })
+
+        });
+        res.status(200).json(lista);
+      })
+  } else { //Não adm
+      res.sendStatus(403)
+  }
+});
+
+
 // LISTAR ok
 router.get("/", verifyToken, (req, res) => {
 
@@ -27,7 +64,8 @@ router.get("/", verifyToken, (req, res) => {
             descricao: element.descricao,
             status: element.status,
             justificativa: element.justificativa,
-            id: element.id
+            id: element.id,
+            data : element.createdAt
           })
 
         });
@@ -36,10 +74,26 @@ router.get("/", verifyToken, (req, res) => {
   } else { //Usuario comun então apenas é mostrado as suas solicitações
     models.solicitacoes
       .findAll({
+        include: [{
+          model: models.usuarios,
+          where: { id: Sequelize.col('usuario_id') },
+          attributes: ['nome']
+        }],
         where: { usuario_id: req.dados.usuario.id }
       })
-      .then(solicitacoes => {
-        res.status(200).json(solicitacoes);
+      .then(solicitacoes => { let lista = [];
+        solicitacoes.forEach(function (element) {
+          lista.push({
+            nome: element.usuario.nome,
+            descricao: element.descricao,
+            status: element.status,
+            justificativa: element.justificativa,
+            id: element.id,
+            data : element.createdAt
+          })
+
+        });
+        res.status(200).json(lista);
       })
   }
 });
