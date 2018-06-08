@@ -29,15 +29,15 @@ router.get("/validar", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            data : element.createdAt,
-            quantidade : element.quantidade
+            data: element.createdAt,
+            quantidade: element.quantidade
           })
 
         });
         res.status(200).json(lista);
       })
   } else { //Não adm
-      res.sendStatus(403)
+    res.sendStatus(403)
   }
 });
 
@@ -65,7 +65,7 @@ router.get("/", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            data : element.createdAt
+            data: element.createdAt
           })
 
         });
@@ -81,7 +81,8 @@ router.get("/", verifyToken, (req, res) => {
         }],
         where: { usuario_id: req.dados.usuario.id }
       })
-      .then(solicitacoes => { let lista = [];
+      .then(solicitacoes => {
+        let lista = [];
         solicitacoes.forEach(function (element) {
           lista.push({
             nome: element.usuario.nome,
@@ -89,7 +90,7 @@ router.get("/", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            data : element.createdAt
+            data: element.createdAt
           })
 
         });
@@ -116,6 +117,47 @@ router.post("/", verifyToken, (req, res) => {
 });
 
 
+// LISTAR ORÇAMENTOS ok
+router.get("/:id/orcamentos", (req, res) => {
+  models.orcamentos
+    .findAll({
+      where: { solicitacao_id: req.params.id }
+    })
+    .then(orcamentos => {
+      res.status(200).json(orcamentos)
+    })
+    .catch(err => { res.status(400).send(err) })
+});
+
+
+// LISTAR ok
+router.get("/:id", verifyToken, (req, res) => {
+
+  models.solicitacoes
+    .findAll({
+      include: [{
+        model: models.usuarios,
+        where: { id: Sequelize.col('usuario_id') },
+        attributes: ['nome']
+      }],
+      where: {id = req.params.id}
+    })
+    .then(solicitacoes => {
+      let lista = [];
+      solicitacoes.forEach(function (element) {
+        lista.push({
+          nome: element.usuario.nome,
+          descricao: element.descricao,
+          status: element.status,
+          justificativa: element.justificativa,
+          id: element.id,
+          data: element.createdAt
+        })
+
+      });
+      res.status(200).json(lista);
+    })
+});
 
 /*
 router.get("/", (req, res) => {
