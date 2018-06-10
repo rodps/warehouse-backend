@@ -54,7 +54,7 @@ router.get("/", verifyToken, (req, res) => {
           where: { id: Sequelize.col('usuario_id') },
           attributes: ['nome']
         }],
-        where: { [Sequelize.Op.or]: [{ status: "ABERTO" }, { status: "DESERTO" }] }
+        where: { [Sequelize.Op.or]: [{ status: "DESERTO" },{ status: "APROVADO" }] }
       })
       .then(solicitacoes => {
         let lista = [];
@@ -140,7 +140,7 @@ router.get("/:id", verifyToken, (req, res) => {
         where: { id: Sequelize.col('usuario_id') },
         attributes: ['nome']
       }],
-      where: {id = req.params.id}
+      where: {id : req.params.id}
     })
     .then(solicitacoes => {
       let lista = [];
