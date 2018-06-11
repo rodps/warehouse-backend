@@ -2,7 +2,6 @@ var express = require("express");
 var router = express.Router();
 var models = require("../models");
 var Sequelize = require("sequelize");
-const isLoggedIn = require("../middleware/index").isLoggedIn;
 const verifyToken = require("../middleware/index").verifyToken;
 
 
@@ -140,7 +139,7 @@ router.get("/:id", verifyToken, (req, res) => {
         where: { id: Sequelize.col('usuario_id') },
         attributes: ['nome']
       }],
-      where: {id : req.params.id}
+      where: {id: req.params.id}
     })
     .then(solicitacoes => {
       let lista = [];

@@ -1,5 +1,5 @@
 module.exports = function(sequelize , DataTypes){
-    var produtos_siorg = sequelize.define('produtos_siorg', {
+    var produtos = sequelize.define('produtos', {
         siorg: {
             type:DataTypes.INTEGER,
             primaryKey: true,
@@ -7,5 +7,5 @@ module.exports = function(sequelize , DataTypes){
         descricao: DataTypes.STRING(1024)
     });
 
-    return produtos_siorg;
+    return produtos;
 }

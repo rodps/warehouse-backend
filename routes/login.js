@@ -5,15 +5,6 @@ var passport = require("passport");
 var middleware = require("../middleware");
 var jwt = require('jsonwebtoken');
 
-// Front ?
-// router.get("/signup", (req, res) => {
-//   res.render("autenticacao/signup");
-// });
-
-// Front ?
-// router.get("/login", (req, res) => {
-//   res.render("autenticacao/login");
-// });
 router.get("/", (req, res) => {
   res.send("padrao")
   
@@ -25,8 +16,6 @@ router.post("/signup",
     failureRedirect: "/signup"
   })
 );
-
-
 
 router.post("/login",
   passport.authenticate("local-signin", {

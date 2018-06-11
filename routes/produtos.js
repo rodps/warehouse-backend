@@ -5,7 +5,7 @@ var middleware = require("../middleware");
 
 // LISTAR ok 
 router.get("/", (req, res) => {
-  models.produtos_siorg
+  models.produtos
     .findAll()
     .then(allProdutos => {
       res.status(200).json(allProdutos);
@@ -15,7 +15,7 @@ router.get("/", (req, res) => {
 
 // CRIAR ok
 router.post("/", (req, res) => {
-  models.produtos_siorg
+  models.produtos
     .create({
       siorg: req.body.siorg,
       descricao: req.body.descricao
@@ -28,7 +28,7 @@ router.post("/", (req, res) => {
 
 // MOSTRAR ok
 router.get("/:id", (req, res) => {
-  models.produtos_siorg
+  models.produtos
     .findById(req.params.id)
     .then(produto => {
       res.status(200).json(produto);
@@ -38,7 +38,7 @@ router.get("/:id", (req, res) => {
 
 // EDITAR ok
 router.put("/:id", (req, res) => {
-  models.produtos_siorg
+  models.produtos
     .findById(req.params.id)
     .then(produto => {
       produto.update({
@@ -54,7 +54,7 @@ router.put("/:id", (req, res) => {
 
 // DELETAR ok
 router.delete("/:id", (req, res) => {
-  models.produtos_siorg
+  models.produtos
     .findById(req.params.id)
     .then(produto => {
       produto.destroy().then(deleted => {
