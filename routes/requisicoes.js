@@ -7,7 +7,7 @@ const Op = Sequelize.Op;
 const verifyTokenAdm = require("../middleware/index").verifyTokenAdm;
 
 // LISTAR ok
-router.get("/",verifyTokenAdm, (req, res) => {
+router.get("/", verifyTokenAdm, (req, res) => {
     models.requisicoes
         .findAll({
             include: [{
@@ -15,28 +15,29 @@ router.get("/",verifyTokenAdm, (req, res) => {
                 where: { id: Sequelize.col('usuario_id') },
                 attributes: ['nome']
             }],
-            where : {status : 'VALIDA'}
+            where: { status: 'VALIDA' }
         })
         .then(requisicoes => {
-         let lista = [];
-        requisicoes.forEach(function (element) {
-          lista.push({
-            solicitante: element.usuario.nome,
-            nome:element.nome,
-            numero: element.numero,
-            id: element.id
-          })
+            let lista = [];
+            requisicoes.forEach(function (element) {
+                lista.push({
+                    solicitante: element.usuario.nome,
+                    nome: element.nome,
+                    numero: element.numero,
+                    id: element.id,
+                    data: element.createdAt
+                })
 
-        });
-        res.status(200).json(lista);
+            });
+            res.status(200).json(lista);
         })
         .catch(err => { res.status(400).send(err) })
 });
 
 // CRIAR ok
-router.post("/",verifyTokenAdm, (req, res) => {
+router.post("/", verifyTokenAdm, (req, res) => {
     console.log("entrei")
-      models.requisicoes.create({ usuario_id: req.dados.usuario.id, status: "VALIDA", nome: req.body.nome }).then((_requisicao) => {
+    models.requisicoes.create({ usuario_id: req.dados.usuario.id, status: "VALIDA", nome: req.body.nome, numero: "Não Definido" }).then((_requisicao) => {
         let id_requisicao = _requisicao.id;
         let lista = []
         req.body.solicitacoes.forEach(function (idSolicitacoes) {
@@ -77,15 +78,47 @@ router.get("/:id", (req, res) => {
         .findAll({
             include: [{
                 model: models.solicitacoes,
-                where: {id: Sequelize.col('requisicao_id')}
+                where: { id: Sequelize.col('requisicao_id') },
+                include: [{
+                    model: models.usuarios,
+                    where: { id: Sequelize.col('usuario_id') },
+                    attributes: ['nome']
+                }],
             }],
-            where: {requisicao_id: req.params.id}
+            where: { requisicao_id: req.params.id }
         })
         .then(solicitacoes => {
-            res.status(200).json(solicitacoes)
+            let lista = [];
+            var i;
+            for (i = 0; i < solicitacoes.length; i++) {
+                lista.push({
+                    nome: solicitacoes[i].solicitaco.usuario.nome,
+                    descricao: solicitacoes[i].solicitaco.descricao,
+                    status: solicitacoes[i].solicitaco.status,
+                    justificativa: solicitacoes[i].solicitaco.justificativa,
+                    id: solicitacoes[i].solicitaco.id,
+                    data: solicitacoes[i].solicitaco.createdAt
+
+                })
+            }
+            res.status(200).json(lista);
+            //res.status(200).json(solicitacoes[0]);
         })
         .catch(err => { res.status(400).send(err) })
 });
+
+//RETORNAR O NUMERO DA REQUISICAO
+
+router.get("/numero/:id", (req, res) => {
+    models.requisicoes.findById(req.params.id)
+        .then(num => {
+            let numero = num.numero
+            res.status(200).json(numero);
+        }).catch(err => {
+            res.status(400).send(err)
+        })
+});
+
 
 // EDITAR ok
 router.put("/:id", (req, res) => {
@@ -93,12 +126,12 @@ router.put("/:id", (req, res) => {
         .findById(req.params.id)
         .then(requisicao => {
             requisicao.update({
-                nome: req.body.nome,
+                //nome: req.body.nome,
                 numero: req.body.numero
             }).then(updated => {
                 res.status(200).json(updated)
             })
-            .catch(err => { res.status(400).send(err) })
+                .catch(err => { res.status(400).send(err) })
         })
         .catch(err => { res.status(400).send(err) })
 });
@@ -111,7 +144,7 @@ router.delete("/:id", (req, res) => {
             requisicao.destroy().then(destroyed => {
                 res.status(200).json(requisicao);
             })
-            .catch(err => { res.status(400).send(err) })
+                .catch(err => { res.status(400).send(err) })
         })
         .catch(err => { res.status(400).send(err) })
 });
@@ -139,6 +172,7 @@ router.post("/:id/solicitacoes", (req, res) => {
 // REMOVER SOLICITAÇÃO ok mas tem que arrumar.
 // acho q vai ficar dificil excluir pelo id da tabela de solicitacao_requisicao
 // tem q fazer outro select
+/*
 router.delete("/:id/solicitacoes/:idSolicitacaoRequisicao", (req, res) => {
     models.solicitacao_requisicao
         .findById(req.params.idSolicitacaoRequisicao)
@@ -146,9 +180,28 @@ router.delete("/:id/solicitacoes/:idSolicitacaoRequisicao", (req, res) => {
             solicitacao.destroy().then(destroyed => {
                 res.status(200).json(destroyed);
             })
-            .catch(err => { res.status(400).send(err) })
+                .catch(err => { res.status(400).send(err) })
         })
         .catch(err => { res.status(400).send(err) })
 })
+*/
+router.delete('/excluir/solicitacao/:id', function (req, res) {
+    models.solicitacoes.update({
+        status: "APROVADO",
+    }, {
+            where: {
+                id: req.params.id
+            }
+        }).then(() => {
+            console.log('Status ATUALIZADO');
+        })
+
+    models.solicitacao_requisicao.destroy({
+        where: { solicitacao_id: req.params.id }
+    }).then(() => {
+        console.log('solicitacao _ requisicao remolvida');
+    })
+    res.status(201).send("Solicitacao remolvida");
+});
 
 module.exports = router;
