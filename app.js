@@ -9,7 +9,10 @@ var express            = require("express"),
     passportStrategies = require("./config/passport")(db.usuarios),
     methodOverride     = require("method-override"),
     cors               = require('cors'),
+    moment             = require('moment'),
     app                = express();
+     
+
 
 // rotas
 var loginRouter        = require("./routes/login"),
@@ -24,7 +27,7 @@ app.use(bodyParser.json());
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
 app.use(cors());
- 
+moment.locale('pt-br');
 
 //passport config
 app.use(

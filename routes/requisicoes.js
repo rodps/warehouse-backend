@@ -5,6 +5,7 @@ var Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 //const isLoggedInAdm = require("../middleware/index").isLoggedInAdm;
 const verifyTokenAdm = require("../middleware/index").verifyTokenAdm;
+const moment = require('moment');
 
 // LISTAR ok
 router.get("/", verifyTokenAdm, (req, res) => {
@@ -25,7 +26,7 @@ router.get("/", verifyTokenAdm, (req, res) => {
                     nome: element.nome,
                     numero: element.numero,
                     id: element.id,
-                    data: element.createdAt
+                    data: moment(element.createdAt).format('ll')
                 })
 
             });
@@ -97,7 +98,7 @@ router.get("/:id", (req, res) => {
                     status: solicitacoes[i].solicitaco.status,
                     justificativa: solicitacoes[i].solicitaco.justificativa,
                     id: solicitacoes[i].solicitaco.id,
-                    data: solicitacoes[i].solicitaco.createdAt
+                    data:moment(solicitacoes[i].solicitaco.createdAt).format('ll')
 
                 })
             }

@@ -3,6 +3,7 @@ var router = express.Router();
 var models = require("../models");
 var Sequelize = require("sequelize");
 const verifyToken = require("../middleware/index").verifyToken;
+const moment = require('moment');
 
 
 //Validar solicitacoes
@@ -28,8 +29,10 @@ router.get("/validar", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            data: element.createdAt,
-            quantidade: element.quantidade
+            
+            data: moment(element.createdAt).format('ll'),
+            quantidade: element.quantidade,
+            siorg: element.siorg
           })
 
         });
@@ -64,7 +67,7 @@ router.get("/", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            data: element.createdAt
+            data: moment(element.createdAt).format('ll')
           })
 
         });
@@ -89,7 +92,7 @@ router.get("/", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            data: element.createdAt
+            data: moment(element.createdAt).format('ll')
           })
 
         });
@@ -150,7 +153,7 @@ router.get("/:id", verifyToken, (req, res) => {
           status: element.status,
           justificativa: element.justificativa,
           id: element.id,
-          data: element.createdAt,
+          data: moment(element.createdAt).format('ll'),
           quantidade : element.quantidade
         })
 

@@ -2,9 +2,11 @@ var express = require("express");
 var router = express.Router();
 var models = require("../models");
 var middleware = require("../middleware");
+const verifyToken = require("../middleware/index").verifyToken;
+const verifyTokenAdm = require("../middleware/index").verifyTokenAdm;
 
 // LISTAR ok 
-router.get("/", (req, res) => {
+router.get("/",verifyToken, (req, res) => {
   models.produtos
     .findAll()
     .then(allProdutos => {
@@ -14,7 +16,7 @@ router.get("/", (req, res) => {
 });
 
 // CRIAR ok
-router.post("/", (req, res) => {
+router.post("/",verifyTokenAdm, (req, res) => {
   models.produtos
     .create({
       siorg: req.body.siorg,
@@ -27,7 +29,7 @@ router.post("/", (req, res) => {
 });
 
 // MOSTRAR ok
-router.get("/:id", (req, res) => {
+router.get("/:id",verifyToken, (req, res) => {
   models.produtos
     .findById(req.params.id)
     .then(produto => {
@@ -37,7 +39,7 @@ router.get("/:id", (req, res) => {
 });
 
 // EDITAR ok
-router.put("/:id", (req, res) => {
+router.put("/:id",verifyTokenAdm, (req, res) => {
   models.produtos
     .findById(req.params.id)
     .then(produto => {
@@ -53,7 +55,7 @@ router.put("/:id", (req, res) => {
 });
 
 // DELETAR ok
-router.delete("/:id", (req, res) => {
+router.delete("/:id",verifyTokenAdm, (req, res) => {
   models.produtos
     .findById(req.params.id)
     .then(produto => {
