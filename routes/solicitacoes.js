@@ -150,7 +150,8 @@ router.get("/:id", verifyToken, (req, res) => {
           status: element.status,
           justificativa: element.justificativa,
           id: element.id,
-          data: element.createdAt
+          data: element.createdAt,
+          quantidade : element.quantidade
         })
 
       });

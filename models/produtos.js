@@ -4,7 +4,7 @@ module.exports = function(sequelize , DataTypes){
             type:DataTypes.INTEGER,
             primaryKey: true,
         },
-        descricao: DataTypes.STRING(1024)
+        descricao: DataTypes.STRING(2048)
     });
 
     return produtos;
