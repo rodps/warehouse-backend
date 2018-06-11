@@ -1,6 +1,7 @@
 function associate(models) {
-  const { usuarios, solicitacoes } = models;
+  const { usuarios, solicitacoes, produtos } = models;
   solicitacoes.belongsTo(usuarios, { foreignKey: "usuario_id" });
+  solicitacoes.belongsTo(produtos, { foreignKey: "siorg" });
 }
 
 module.exports = function(sequelize, DataTypes) {
