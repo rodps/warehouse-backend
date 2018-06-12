@@ -42,6 +42,36 @@ router.get("/validar", verifyToken, (req, res) => {
   }
 });
 
+// LISTAR PARA CRIAR REQUISICAO
+router.get("/requisicao", verifyToken, (req, res) => {
+
+  models.solicitacoes
+    .findAll({
+      include: [{
+        model: models.usuarios,
+        where: { id: Sequelize.col('usuario_id') },
+        attributes: ['nome']
+      }],
+      where: { [Sequelize.Op.or]: [{ status: "DESERTO" }, { status: "APROVADO" }, { status: "ABERTO" }], }
+    })
+    .then(solicitacoes => {
+      let lista = [];
+      solicitacoes.forEach(function (element) {
+        lista.push({
+          nome: element.usuario.nome,
+          descricao: element.descricao,
+          status: element.status,
+          justificativa: element.justificativa,
+          id: element.id,
+          feedback: element.feedback,
+          data: moment(element.createdAt).format('ll')
+        })
+
+      });
+      res.status(200).json(lista);
+    })
+
+});
 
 // LISTAR ok
 router.get("/", verifyToken, (req, res) => {
@@ -55,7 +85,7 @@ router.get("/", verifyToken, (req, res) => {
           where: { id: Sequelize.col('usuario_id') },
           attributes: ['nome']
         }],
-       // where: { [Sequelize.Op.or]: [{ status: "DESERTO" },{ status: "APROVADO" },{ status: "ABERTO" }], }
+        // where: { [Sequelize.Op.or]: [{ status: "DESERTO" },{ status: "APROVADO" },{ status: "ABERTO" }], }
       })
       .then(solicitacoes => {
         let lista = [];
@@ -66,7 +96,7 @@ router.get("/", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            feedback : element.feedback,
+            feedback: element.feedback,
             data: moment(element.createdAt).format('ll')
           })
 
@@ -92,7 +122,7 @@ router.get("/", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            feedback : element.feedback,
+            feedback: element.feedback,
             data: moment(element.createdAt).format('ll')
           })
 
@@ -112,7 +142,7 @@ router.post("/", verifyToken, (req, res) => {
       justificativa: req.body.justificativa,
       quantidade: req.body.quantidade,
       usuario_id: req.dados.usuario.id,
-      siorg : req.body.siorg
+      siorg: req.body.siorg
     })
     .then(solicitacao => {
       res.status(201).json(solicitacao);
@@ -144,7 +174,7 @@ router.get("/:id", verifyToken, (req, res) => {
         where: { id: Sequelize.col('usuario_id') },
         attributes: ['nome']
       }],
-      where: {id: req.params.id}
+      where: { id: req.params.id }
     })
     .then(solicitacoes => {
       let lista = [];
@@ -155,10 +185,10 @@ router.get("/:id", verifyToken, (req, res) => {
           status: element.status,
           justificativa: element.justificativa,
           id: element.id,
-          feedback : element.feedback,
+          feedback: element.feedback,
           data: moment(element.createdAt).format('ll'),
-          quantidade : element.quantidade,
-          siorg : element.siorg
+          quantidade: element.quantidade,
+          siorg: element.siorg
         })
 
       });
@@ -178,8 +208,8 @@ router.put("/:id", (req, res) => {
           descricao: req.body.descricao,
           justificativa: req.body.justificativa,
           quantidade: req.body.quantidade,
-          siorg : req.body.siorg,
-          feedback : req.body.feedback
+          siorg: req.body.siorg,
+          feedback: req.body.feedback
         })
         .then(solicitacaoEditada => {
           res.status(200).send(solicitacaoEditada);
