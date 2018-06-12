@@ -13,10 +13,11 @@ module.exports = function(sequelize, DataTypes) {
         "REQUISITADO",
         "COMPRADO",
         "DESERTO",
-        "CANCELADA"
+        "CANCELADO"
       ),
       quantidade: DataTypes.INTEGER,
-      justificativa: DataTypes.STRING(500)
+      justificativa: DataTypes.STRING(500),
+      feedback: DataTypes.STRING(1000)
   });
 
   solicitacoes.associate = associate;

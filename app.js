@@ -18,7 +18,8 @@ var express            = require("express"),
 var loginRouter        = require("./routes/login"),
     solicitacoesRouter = require("./routes/solicitacoes"),
     produtosRouter     = require("./routes/produtos"),
-    requisicoesRouter  = require("./routes/requisicoes");
+    requisicoesRouter  = require("./routes/requisicoes"),
+    orcamentosRouter   = require("./routes/orcamentos");
 
 // configuracoes
 app.use(methodOverride('_method'));
@@ -45,6 +46,7 @@ app.use("/", loginRouter);
 app.use("/solicitacoes", solicitacoesRouter);
 app.use("/produtos", produtosRouter);
 app.use("/requisicoes", requisicoesRouter);
+app.use("/orcamentos", requisicoesRouter);
 
 //Cria o banco de dados
 //sync({force:true}) Drop tables se ja existirem

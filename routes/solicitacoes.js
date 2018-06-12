@@ -29,7 +29,6 @@ router.get("/validar", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            
             data: moment(element.createdAt).format('ll'),
             quantidade: element.quantidade,
             siorg: element.siorg
@@ -67,6 +66,7 @@ router.get("/", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
+            feedback : element.feedback,
             data: moment(element.createdAt).format('ll')
           })
 
@@ -92,6 +92,7 @@ router.get("/", verifyToken, (req, res) => {
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
+            feedback : element.feedback,
             data: moment(element.createdAt).format('ll')
           })
 
@@ -110,7 +111,8 @@ router.post("/", verifyToken, (req, res) => {
       descricao: req.body.descricao,
       justificativa: req.body.justificativa,
       quantidade: req.body.quantidade,
-      usuario_id: req.dados.usuario.id
+      usuario_id: req.dados.usuario.id,
+      siorg : req.body.siorg
     })
     .then(solicitacao => {
       res.status(201).json(solicitacao);
@@ -153,14 +155,42 @@ router.get("/:id", verifyToken, (req, res) => {
           status: element.status,
           justificativa: element.justificativa,
           id: element.id,
+          feedback : element.feedback,
           data: moment(element.createdAt).format('ll'),
-          quantidade : element.quantidade
+          quantidade : element.quantidade,
+          siorg : element.siorg
         })
 
       });
       res.status(200).json(lista);
     })
 });
+
+
+// EDITAR ok
+router.put("/:id", (req, res) => {
+  models.solicitacoes
+    .findById(req.params.id)
+    .then(solicitacao => {
+      solicitacao
+        .update({
+          status: req.body.status,
+          descricao: req.body.descricao,
+          justificativa: req.body.justificativa,
+          quantidade: req.body.quantidade,
+          siorg : req.body.siorg,
+          feedback : req.body.feedback
+        })
+        .then(solicitacaoEditada => {
+          res.status(200).send(solicitacaoEditada);
+        })
+        .catch(err => { res.status(400).send(err) })
+    })
+    .catch(err => { res.status(400).send(err) })
+});
+
+
+
 
 /*
 router.get("/", (req, res) => {
@@ -192,25 +222,6 @@ router.get("/:id", (req, res) => {
     .catch(err => { res.status(400).send(err) })
 });
 
-// EDITAR ok
-router.put("/:id", (req, res) => {
-  models.solicitacoes
-    .findById(req.params.id)
-    .then(solicitacao => {
-      solicitacao
-        .update({
-          status: req.body.status,
-          descricao: req.body.descricao,
-          justificativa: req.body.justificativa,
-          quantidade: req.body.quantidade
-        })
-        .then(solicitacaoEditada => {
-          res.status(200).send(solicitacaoEditada);
-        })
-        .catch(err => { res.status(400).send(err) })
-    })
-    .catch(err => { res.status(400).send(err) })
-});
 
 // DELETAR ok
 router.delete('/:id', function(req,res) { 
