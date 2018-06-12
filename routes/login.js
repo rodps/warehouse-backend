@@ -29,7 +29,9 @@ router.post("/login",
     var token = jwt.sign({ usuario }, 'secretkey', (err,token) =>{
       const ret = {
         token : token,
-        isAdm : req.user.adm
+        isAdm : req.user.adm,
+        nome : req.user.nome,
+
       }
       res.status(201).json(ret)
     });
