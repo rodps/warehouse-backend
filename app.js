@@ -11,10 +11,8 @@ var express            = require("express"),
     cors               = require('cors'),
     moment             = require('moment'),
     app                = express();
-     
 
-
-// rotas
+// routers
 var loginRouter        = require("./routes/login"),
     solicitacoesRouter = require("./routes/solicitacoes"),
     produtosRouter     = require("./routes/produtos"),
@@ -23,7 +21,9 @@ var loginRouter        = require("./routes/login"),
 
 // configuracoes
 app.use(methodOverride('_method'));
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
 app.use(bodyParser.json());
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
@@ -31,11 +31,15 @@ app.use(cors());
 moment.locale('pt-br');
 
 //passport config
-app.use(
-  session({ secret: "keyboard cat", resave: true, saveUninitialized: true })
-); // session secret
+// app.use(
+//   session({
+//     secret: "keyboard cat",
+//     resave: true,
+//     saveUninitialized: true
+//   })
+// );
 app.use(passport.initialize());
-app.use(passport.session()); // persistent login sessions
+// app.use(passport.session()); // persistent login sessions
 passport.use("local-signup", passportStrategies.localSignup);
 passport.use("local-signin", passportStrategies.localSignin);
 passport.serializeUser(passportStrategies.serialize);
@@ -46,17 +50,19 @@ app.use("/", loginRouter);
 app.use("/solicitacoes", solicitacoesRouter);
 app.use("/produtos", produtosRouter);
 app.use("/requisicoes", requisicoesRouter);
-app.use("/orcamentos", requisicoesRouter);
+app.use("/orcamentos", orcamentosRouter);
 
-//Cria o banco de dados
-//sync({force:true}) Drop tables se ja existirem
+/**
+ *  Inicializa o banco de dados
+ *  sync({force:true}) Drop tables if exists
+ */
 db.sequelize.sync().then(() => {
   console.log("Nice! Database looks fine");
-}).catch(function(err) {
+}).catch(function (err) {
   console.log(err, "Algo deu errado com a database!");
 });
 
-module.exports = app.listen(3001, function(err) {
-    if (!err) console.log("The server has started!");
-    else console.log(err);
+module.exports = app.listen(3001, function (err) {
+  if (!err) console.log("The server has started!");
+  else console.log(err);
 });
