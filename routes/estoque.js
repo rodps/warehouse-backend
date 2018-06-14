@@ -39,14 +39,20 @@ router.get("/requisitado", (req, res) => {
 
 });
 
+
 //Rota para listar produtos em estoque 
 
 router.get("/emprestimo", (req, res) => {
     sequelize.query(
-        'SELECT *  FROM movimentacoes as m where m.id in (select max(id) as id from database_development.movimentacoes as m2 where m2.produto_id = m.produto_id)',
+        'SELECT *  FROM movimentacoes as m, produtos as p '+ 
+            'where m.id in '+
+             '(select max(id) as id from database_development.movimentacoes as m2 where m2.produto_id = m.produto_id) '+
+            ' and m.produto_id = p.siorg',
              { type: sequelize.QueryTypes.SELECT}
         ).then(produtos =>{
             res.send(produtos)
+        }).catch(err => {
+            res.status(400).send("Erro ao tentar listar produtos "+ err)
         })
 
         
@@ -56,14 +62,14 @@ router.get("/emprestimo", (req, res) => {
 
 //emprestar produto
 router.post("/emprestimo", (req, res) => {
-    var entrada = {}
+    var saida = {}
     db.movimentacoes.findAll({
         where: { produto_id: req.body.produto_id },
         order: Sequelize.literal('id DESC')
     }).then(produtos => {
         if (produtos.length > 0) {
 
-            entrada = {
+            saida = {
                 local: "Em estoque",
                 quantidade_atual: produtos[0].quantidade_atual - req.body.quantidade,
                 quantidade_lancamento: 0,
@@ -71,11 +77,9 @@ router.post("/emprestimo", (req, res) => {
                 produto_id: req.body.produto_id,
                 tipo: "SAIDA"
             }
-            db.movimentacoes.create(entrada)
-            res.status(201).json(estoque);
+            db.movimentacoes.create(saida)
+            
         }
-    }).catch(err => {
-        res.status(400).send("erro no emprestimo")
     })
 
 });
