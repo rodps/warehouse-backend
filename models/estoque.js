@@ -1,0 +1,19 @@
+function associate(models){
+    const {
+        estoque,
+        solicitacoes,
+        orcamentos
+    } = models;
+    estoque.belongsTo(solicitacoes, { foreignKey:'solicitacao_id' });
+    estoque.belongsTo(orcamentos, { foreignKey:'orcamento_id' });
+}
+
+module.exports = function(sequelize , DataTypes){
+    var estoque = sequelize.define('estoque', {
+        quantidade: DataTypes.INTEGER,
+        codigo: DataTypes.STRING
+    });
+
+    estoque.associate = associate;
+    return estoque;
+}

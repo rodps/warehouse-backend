@@ -1,11 +1,11 @@
 function associate(models){
     const {
         usuarios,
-        produtos,
+        estoque,
         movimentacoes
     } = models;
     movimentacoes.belongsTo(usuarios, { foreignKey:'usuario_id' });
-    movimentacoes.belongsTo(produtos, { foreignKey:'produto_id' });
+    movimentacoes.belongsTo(estoque, { foreignKey:'estoque_id' });
 }
 
 module.exports = function(sequelize , DataTypes){

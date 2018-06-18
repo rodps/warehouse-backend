@@ -44,9 +44,9 @@ router.get("/requisitado", (req, res) => {
 
 router.get("/emprestimo", (req, res) => {
     sequelize.query(
-        'SELECT *  FROM movimentacoes as m, produtos as p '+ 
+        'SELECT *  FROM movimentacoes as m, solicitacoes as s '+ 
             'where m.id in '+
-             '(select max(id) as id from database_development.movimentacoes as m2 where m2.produto_id = m.produto_id) '+
+             '(select max(id) as id from database_development.movimentacoes as m2 where m2.solicitacao_id = m.solicitacao_id) '+
             ' and m.produto_id = p.siorg',
              { type: sequelize.QueryTypes.SELECT}
         ).then(produtos =>{
@@ -137,11 +137,6 @@ router.post("/", (req, res) => {
         )
 
 });
-
-
-
-
-
 
 
 
