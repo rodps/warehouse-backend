@@ -135,19 +135,34 @@ router.get("/", verifyToken, (req, res) => {
 // CRIAR ok
 router.post("/", verifyToken, (req, res) => {
 
-  models.solicitacoes
-    .create({
-      status: "ABERTO",
-      descricao: req.body.descricao,
-      justificativa: req.body.justificativa,
-      quantidade: req.body.quantidade,
-      usuario_id: req.dados.usuario.id,
-      siorg: req.body.siorg
-    })
-    .then(solicitacao => {
-      res.status(201).json(solicitacao);
-    })
-    .catch(err => { res.status(400).send(err) })
+  if (req.body.siorg) {
+    models.solicitacoes
+      .create({
+        status: "ABERTO",
+        descricao: req.body.descricao,
+        justificativa: req.body.justificativa,
+        quantidade: req.body.quantidade,
+        usuario_id: req.dados.usuario.id,
+        siorg: req.body.siorg
+      })
+      .then(solicitacao => {
+        res.status(201).json(solicitacao);
+      })
+      .catch(err => { res.status(400).send(err) })
+  }else{
+    models.solicitacoes
+      .create({
+        status: "ABERTO",
+        descricao: req.body.descricao,
+        justificativa: req.body.justificativa,
+        quantidade: req.body.quantidade,
+        usuario_id: req.dados.usuario.id,
+      })
+      .then(solicitacao => {
+        res.status(201).json(solicitacao);
+      })
+      .catch(err => { res.status(400).send(err) })
+  }
 });
 
 

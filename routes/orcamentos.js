@@ -21,10 +21,10 @@ router.post("/:idSolicitacao", (req, res) => {
     //var orcamentos = req.body;
    // console.log(orcamentos);
     models.orcamentos.create({
-        origem: req.body.orcamento.origem,
-        valor: req.body.orcamento.valor,
-        cnpj_fornecedor: req.body.orcamento.cnpj_fornecedor,
-        nome_fornecedor: req.body.orcamento.nome_fornecedor,
+        origem: req.body.origem,
+        valor: req.body.valor,
+        cnpj_fornecedor: req.body.cnpj_fornecedor,
+        nome_fornecedor: req.body.nome_fornecedor,
         solicitacao_id: req.params.idSolicitacao
     }).then(() => {
         res.status(200).send("ok");
@@ -33,6 +33,7 @@ router.post("/:idSolicitacao", (req, res) => {
     })
 
 });
+
 
 //excluir
 router.delete('/:id', function (req, res) {

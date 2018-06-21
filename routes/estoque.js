@@ -7,6 +7,22 @@ const Op = Sequelize.Op;
 var env = process.env.NODE_ENV || "development";
 var config = require("../config/config.json")[env];
 var sequelize = new Sequelize(config);
+const verifyToken = require("../middleware/index").verifyToken;
+
+router.get('/devolucao',verifyToken,(req,res)=>{
+    db.movimentacoes.findAll({
+        where : {
+            usuario_id :req.dados.usuario.id
+        }
+    }).then(devolucao =>{
+        res.status(200).send(devolucao)
+    }).catch (err =>{
+     res.status(400).send(err)
+    })
+})
+
+
+
 
 // RETORNAR UMA LISTA DE SOLICITACOES COM STATUS REQUISTADO
 router.get("/requisitado", (req, res) => {
@@ -61,21 +77,22 @@ router.get("/emprestimo", (req, res) => {
 
 
 //emprestar produto
-router.post("/emprestimo", (req, res) => {
+router.post("/emprestimo",verifyToken, (req, res) => {
     var saida = {}
     db.movimentacoes.findAll({
         where: { produto_id: req.body.produto_id },
         order: Sequelize.literal('id DESC')
     }).then(produtos => {
         if (produtos.length > 0) {
-
+            
             saida = {
                 local: "Em estoque",
                 quantidade_atual: produtos[0].quantidade_atual - req.body.quantidade,
                 quantidade_lancamento: 0,
                 quantidade_anterior: produtos[0].quantidade_atual,
                 produto_id: req.body.produto_id,
-                tipo: "SAIDA"
+                tipo: "SAIDA",
+                usuario_id: req.dados.usuario.id
             }
             db.movimentacoes.create(saida)
             
