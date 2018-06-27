@@ -107,7 +107,8 @@ router.get("/", verifyToken, (req, res) => {
           });
         });
         res.status(200).json(lista);
-      });
+      })
+      .catch(err => res.status(404).json(err));
   } else {
     //Usuario comun então apenas é mostrado as suas solicitações
     models.solicitacoes
@@ -135,7 +136,8 @@ router.get("/", verifyToken, (req, res) => {
           });
         });
         res.status(200).json(lista);
-      });
+      })
+      .catch(err => res.status(404).json(err));
   }
 });
 
@@ -174,80 +176,6 @@ router.post("/", verifyToken, (req, res) => {
       });
   }
 });
-
-// LISTAR ORÇAMENTOS ok
-router.get("/:id/orcamentos", (req, res) => {
-  models.orcamentos
-    .findAll({
-      where: { solicitacao_id: req.params.id }
-    })
-    .then(orcamentos => {
-      // console.log(orcamentos);
-      res.status(200).send(orcamentos);
-    })
-    .catch(err => {
-      res.status(400).send(err);
-    });
-});
-
-// LISTAR ORÇAMENTOS ok
-router.post("/:id/orcamentos/:orcId?", (req, res) => {
-  if (req.params.orcId) {
-    models.orcamentos
-      .findById(req.params.orcId)
-      .then(orcamento => {
-        orcamento.update({
-          origem: req.body.origem,
-          cnpj_fornecedor: req.body.cnpj_fornecedor,
-          nome_fornecedor: req.body.nome_fornecedor,
-          valor: req.body.valor
-        });
-      })
-      .then(orcamento => {
-        // console.log(orcamento);
-        res.status(200).json(orcamento);
-      })
-      .catch(err => {
-        res.status(400).json(err);
-      });
-  } else {
-    models.orcamentos
-      .create({
-        origem: req.body.origem,
-        cnpj_fornecedor: req.body.cnpj_fornecedor,
-        nome_fornecedor: req.body.nome_fornecedor,
-        valor: req.body.valor,
-        solicitacao_id: req.params.id
-      })
-      .then(orcamento => {
-        // console.log(orcamento);
-        res.status(201).json(orcamento);
-      })
-      .catch(err => {
-        res.status(400).json(err);
-      });
-  }
-});
-
-router.delete("/:id/orcamentos/:orcId", (req, res) => {
-  models.orcamentos.findById(req.params.orcId).then(orcamento => {
-    if (orcamento) {
-      const orcamentoExcluido = orcamento;
-      orcamento.destroy();
-      res.status(200).json(orcamentoExcluido);
-    } else {
-      res.status(404).json({ message: "orcamento not found" });
-    }
-  });
-});
-
-// function editOrcamento(req, res) {
-//   models.orcamentos
-//     .findById(req.params.orcId)
-//     .then(orcamento => console.log(orcamento));
-// }
-
-// router.put(":/id/orcamentos/:orcId", editOrcamento);
 
 // LISTAR ok
 router.get("/:id", verifyToken, (req, res) => {
