@@ -3,60 +3,67 @@ var router = express.Router();
 var models = require("../models");
 var Sequelize = require("sequelize");
 const verifyToken = require("../middleware/index").verifyToken;
-const moment = require('moment');
-
+const moment = require("moment");
 
 //Validar solicitacoes
 router.get("/validar", verifyToken, (req, res) => {
-
-  //ADMINISTRADOR REQUISITA TODAS SOLICITACÕES 
+  //ADMINISTRADOR REQUISITA TODAS SOLICITACÕES
   if (req.dados.usuario.adm) {
     models.solicitacoes
       .findAll({
-        include: [{
-          model: models.usuarios,
-          where: { id: Sequelize.col('usuario_id') },
-          attributes: ['nome']
-        }],
+        include: [
+          {
+            model: models.usuarios,
+            where: { id: Sequelize.col("usuario_id") },
+            attributes: ["nome"]
+          }
+        ],
         where: { [Sequelize.Op.or]: [{ status: "ABERTO" }] }
       })
       .then(solicitacoes => {
         let lista = [];
-        solicitacoes.forEach(function (element) {
+        solicitacoes.forEach(function(element) {
           lista.push({
             nome: element.usuario.nome,
             descricao: element.descricao,
             status: element.status,
             justificativa: element.justificativa,
             id: element.id,
-            data: moment(element.createdAt).format('ll'),
+            data: moment(element.createdAt).format("ll"),
             quantidade: element.quantidade,
             siorg: element.siorg
-          })
-
+          });
         });
         res.status(200).json(lista);
-      })
-  } else { //Não adm
-    res.sendStatus(403)
+      });
+  } else {
+    //Não adm
+    res.sendStatus(403);
   }
 });
 
 // LISTAR PARA CRIAR REQUISICAO
 router.get("/requisicao", verifyToken, (req, res) => {
-
   models.solicitacoes
     .findAll({
-      include: [{
-        model: models.usuarios,
-        where: { id: Sequelize.col('usuario_id') },
-        attributes: ['nome']
-      }],
-      where: { [Sequelize.Op.or]: [{ status: "DESERTO" }, { status: "APROVADO" }, { status: "ABERTO" }], }
+      include: [
+        {
+          model: models.usuarios,
+          where: { id: Sequelize.col("usuario_id") },
+          attributes: ["nome"]
+        }
+      ],
+      where: {
+        [Sequelize.Op.or]: [
+          { status: "DESERTO" },
+          { status: "APROVADO" },
+          { status: "ABERTO" }
+        ]
+      }
     })
     .then(solicitacoes => {
       let lista = [];
-      solicitacoes.forEach(function (element) {
+      solicitacoes.forEach(function(element) {
         lista.push({
           nome: element.usuario.nome,
           descricao: element.descricao,
@@ -64,32 +71,31 @@ router.get("/requisicao", verifyToken, (req, res) => {
           justificativa: element.justificativa,
           id: element.id,
           feedback: element.feedback,
-          data: moment(element.createdAt).format('ll')
-        })
-
+          data: moment(element.createdAt).format("ll")
+        });
       });
       res.status(200).json(lista);
-    })
-
+    });
 });
 
 // LISTAR ok
 router.get("/", verifyToken, (req, res) => {
-
-  //ADMINISTRADOR REQUISITA TODAS SOLICITACÕES 
+  //ADMINISTRADOR REQUISITA TODAS SOLICITACÕES
   if (req.dados.usuario.adm) {
     models.solicitacoes
       .findAll({
-        include: [{
-          model: models.usuarios,
-          where: { id: Sequelize.col('usuario_id') },
-          attributes: ['nome']
-        }],
+        include: [
+          {
+            model: models.usuarios,
+            where: { id: Sequelize.col("usuario_id") },
+            attributes: ["nome"]
+          }
+        ]
         // where: { [Sequelize.Op.or]: [{ status: "DESERTO" },{ status: "APROVADO" },{ status: "ABERTO" }], }
       })
       .then(solicitacoes => {
         let lista = [];
-        solicitacoes.forEach(function (element) {
+        solicitacoes.forEach(function(element) {
           lista.push({
             nome: element.usuario.nome,
             descricao: element.descricao,
@@ -97,25 +103,27 @@ router.get("/", verifyToken, (req, res) => {
             justificativa: element.justificativa,
             id: element.id,
             feedback: element.feedback,
-            data: moment(element.createdAt).format('ll')
-          })
-
+            data: moment(element.createdAt).format("ll")
+          });
         });
         res.status(200).json(lista);
-      })
-  } else { //Usuario comun então apenas é mostrado as suas solicitações
+      });
+  } else {
+    //Usuario comun então apenas é mostrado as suas solicitações
     models.solicitacoes
       .findAll({
-        include: [{
-          model: models.usuarios,
-          where: { id: Sequelize.col('usuario_id') },
-          attributes: ['nome']
-        }],
+        include: [
+          {
+            model: models.usuarios,
+            where: { id: Sequelize.col("usuario_id") },
+            attributes: ["nome"]
+          }
+        ],
         where: { usuario_id: req.dados.usuario.id }
       })
       .then(solicitacoes => {
         let lista = [];
-        solicitacoes.forEach(function (element) {
+        solicitacoes.forEach(function(element) {
           lista.push({
             nome: element.usuario.nome,
             descricao: element.descricao,
@@ -123,18 +131,16 @@ router.get("/", verifyToken, (req, res) => {
             justificativa: element.justificativa,
             id: element.id,
             feedback: element.feedback,
-            data: moment(element.createdAt).format('ll')
-          })
-
+            data: moment(element.createdAt).format("ll")
+          });
         });
         res.status(200).json(lista);
-      })
+      });
   }
 });
 
 // CRIAR ok
 router.post("/", verifyToken, (req, res) => {
-
   if (req.body.siorg) {
     models.solicitacoes
       .create({
@@ -148,23 +154,26 @@ router.post("/", verifyToken, (req, res) => {
       .then(solicitacao => {
         res.status(201).json(solicitacao);
       })
-      .catch(err => { res.status(400).send(err) })
-  }else{
+      .catch(err => {
+        res.status(400).send(err);
+      });
+  } else {
     models.solicitacoes
       .create({
         status: "ABERTO",
         descricao: req.body.descricao,
         justificativa: req.body.justificativa,
         quantidade: req.body.quantidade,
-        usuario_id: req.dados.usuario.id,
+        usuario_id: req.dados.usuario.id
       })
       .then(solicitacao => {
         res.status(201).json(solicitacao);
       })
-      .catch(err => { res.status(400).send(err) })
+      .catch(err => {
+        res.status(400).send(err);
+      });
   }
 });
-
 
 // LISTAR ORÇAMENTOS ok
 router.get("/:id/orcamentos", (req, res) => {
@@ -173,27 +182,89 @@ router.get("/:id/orcamentos", (req, res) => {
       where: { solicitacao_id: req.params.id }
     })
     .then(orcamentos => {
-      res.status(200).json(orcamentos)
+      // console.log(orcamentos);
+      res.status(200).send(orcamentos);
     })
-    .catch(err => { res.status(400).send(err) })
+    .catch(err => {
+      res.status(400).send(err);
+    });
 });
 
+// LISTAR ORÇAMENTOS ok
+router.post("/:id/orcamentos/:orcId?", (req, res) => {
+  if (req.params.orcId) {
+    models.orcamentos
+      .findById(req.params.orcId)
+      .then(orcamento => {
+        orcamento.update({
+          origem: req.body.origem,
+          cnpj_fornecedor: req.body.cnpj_fornecedor,
+          nome_fornecedor: req.body.nome_fornecedor,
+          valor: req.body.valor
+        });
+      })
+      .then(orcamento => {
+        // console.log(orcamento);
+        res.status(200).json(orcamento);
+      })
+      .catch(err => {
+        res.status(400).json(err);
+      });
+  } else {
+    models.orcamentos
+      .create({
+        origem: req.body.origem,
+        cnpj_fornecedor: req.body.cnpj_fornecedor,
+        nome_fornecedor: req.body.nome_fornecedor,
+        valor: req.body.valor,
+        solicitacao_id: req.params.id
+      })
+      .then(orcamento => {
+        // console.log(orcamento);
+        res.status(201).json(orcamento);
+      })
+      .catch(err => {
+        res.status(400).json(err);
+      });
+  }
+});
+
+router.delete("/:id/orcamentos/:orcId", (req, res) => {
+  models.orcamentos.findById(req.params.orcId).then(orcamento => {
+    if (orcamento) {
+      const orcamentoExcluido = orcamento;
+      orcamento.destroy();
+      res.status(200).json(orcamentoExcluido);
+    } else {
+      res.status(404).json({ message: "orcamento not found" });
+    }
+  });
+});
+
+// function editOrcamento(req, res) {
+//   models.orcamentos
+//     .findById(req.params.orcId)
+//     .then(orcamento => console.log(orcamento));
+// }
+
+// router.put(":/id/orcamentos/:orcId", editOrcamento);
 
 // LISTAR ok
 router.get("/:id", verifyToken, (req, res) => {
-
   models.solicitacoes
     .findAll({
-      include: [{
-        model: models.usuarios,
-        where: { id: Sequelize.col('usuario_id') },
-        attributes: ['nome']
-      }],
+      include: [
+        {
+          model: models.usuarios,
+          where: { id: Sequelize.col("usuario_id") },
+          attributes: ["nome"]
+        }
+      ],
       where: { id: req.params.id }
     })
     .then(solicitacoes => {
       let lista = [];
-      solicitacoes.forEach(function (element) {
+      solicitacoes.forEach(function(element) {
         lista.push({
           nome: element.usuario.nome,
           descricao: element.descricao,
@@ -201,16 +272,14 @@ router.get("/:id", verifyToken, (req, res) => {
           justificativa: element.justificativa,
           id: element.id,
           feedback: element.feedback,
-          data: moment(element.createdAt).format('ll'),
+          data: moment(element.createdAt).format("ll"),
           quantidade: element.quantidade,
           siorg: element.siorg
-        })
-
+        });
       });
       res.status(200).json(lista);
-    })
+    });
 });
-
 
 // EDITAR ok
 router.put("/:id", (req, res) => {
@@ -229,14 +298,14 @@ router.put("/:id", (req, res) => {
         .then(solicitacaoEditada => {
           res.status(200).send(solicitacaoEditada);
         })
-        .catch(err => { res.status(400).send(err) })
+        .catch(err => {
+          res.status(400).send(err);
+        });
     })
-    .catch(err => { res.status(400).send(err) })
-
+    .catch(err => {
+      res.status(400).send(err);
+    });
 });
-
-
-
 
 /*
 router.get("/", (req, res) => {

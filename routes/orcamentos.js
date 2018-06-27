@@ -4,48 +4,51 @@ var models = require("../models");
 
 // listar
 
-router.get('/:idSolicitacao', function (req, res) {
-
-    models.orcamentos.findAll({
-        where: { solicitacao_id: req.params.idSolicitacao }
-    }).then((orcamentos) => {
-        res.status(201).send(orcamentos);
+router.get("/:idSolicitacao", function(req, res) {
+  models.orcamentos
+    .findAll({
+      where: { solicitacao_id: req.params.idSolicitacao }
     })
-        .catch(err => { res.status(400).send(err) })
-
+    .then(orcamentos => {
+      res.status(201).send(orcamentos);
+    })
+    .catch(err => {
+      res.status(400).send(err);
+    });
 });
-
 
 //criar
 router.post("/:idSolicitacao", (req, res) => {
-    //var orcamentos = req.body;
-   // console.log(orcamentos);
-    models.orcamentos.create({
-        origem: req.body.origem,
-        valor: req.body.valor,
-        cnpj_fornecedor: req.body.cnpj_fornecedor,
-        nome_fornecedor: req.body.nome_fornecedor,
-        solicitacao_id: req.params.idSolicitacao
-    }).then(() => {
-        res.status(200).send("ok");
-    }).catch(err => {
-        res.status(400).send(err);
+  //var orcamentos = req.body;
+  // console.log(orcamentos);
+  models.orcamentos
+    .create({
+      origem: req.body.origem,
+      valor: req.body.valor,
+      cnpj_fornecedor: req.body.cnpj_fornecedor,
+      nome_fornecedor: req.body.nome_fornecedor,
+      solicitacao_id: req.params.idSolicitacao
     })
-
+    .then(() => {
+      res.status(200).send("ok");
+    })
+    .catch(err => {
+      res.status(400).send(err);
+    });
 });
-
 
 //excluir
-router.delete('/:id', function (req, res) {
-
-    models.orcamentos.destroy({
-        where: { id: req.params.id }
-    }).then(() => {
-        res.status(201).send("EXCLUIDO");
+router.delete("/:id", function(req, res) {
+  models.orcamentos
+    .destroy({
+      where: { id: req.params.id }
     })
-        .catch(err => { res.status(400).send(err) })
-
+    .then(() => {
+      res.status(201).send("EXCLUIDO");
+    })
+    .catch(err => {
+      res.status(400).send(err);
+    });
 });
-
 
 module.exports = router;
