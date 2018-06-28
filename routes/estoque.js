@@ -7,6 +7,22 @@ const Op = Sequelize.Op;
 var env = process.env.NODE_ENV || "development";
 var config = require("../config/config.json")[env];
 var sequelize = new Sequelize(config);
+const verifyToken = require("../middleware/index").verifyToken;
+
+router.get('/devolucao',verifyToken,(req,res)=>{
+    db.movimentacoes.findAll({
+        where : {
+            usuario_id :req.dados.usuario.id
+        }
+    }).then(devolucao =>{
+        res.status(200).send(devolucao)
+    }).catch (err =>{
+     res.status(400).send(err)
+    })
+})
+
+
+
 
 // RETORNAR UMA LISTA DE SOLICITACOES COM STATUS REQUISTADO "FUNCIONANDO"
 
@@ -62,6 +78,7 @@ router.post("/", (req, res) => {
             orcamento_id : p.orcamento_id,
             solicitacao_id : p.solicitacao_id,
             quantidade : p.quantidade,
+
         }
         db.estoque.create(produto).then(sucess => {
             console.log("Solicitacao inserida " + sucess)

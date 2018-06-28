@@ -98,7 +98,7 @@ router.get("/:id", (req, res) => {
                     status: solicitacoes[i].solicitaco.status,
                     justificativa: solicitacoes[i].solicitaco.justificativa,
                     id: solicitacoes[i].solicitaco.id,
-                    data:moment(solicitacoes[i].solicitaco.createdAt).format('ll')
+                    data: moment(solicitacoes[i].solicitaco.createdAt).format('ll')
 
                 })
             }
@@ -149,6 +149,38 @@ router.delete("/:id", (req, res) => {
         })
         .catch(err => { res.status(400).send(err) })
 });
+
+router.post("/:idRequisicao/solicitacoes", (req, res) => {
+
+    let lista = []
+    let solicitacoes = req.body.solicitacoes;
+    solicitacoes.forEach(solicitacao_id => {
+        lista.push({
+            requisicao_id: req.params.id,
+            solicitacao_id: solicitacao_id,
+        })
+    })
+    models.solicitacao_requisicao
+        .bulkCreate(lista)
+        .then(adds => {
+            res.status(201).json(adds);
+        })
+        .catch(err => { res.status(400).send(err) })
+
+    models.solicitacoes.update({
+        status: "REQUISITADO",
+    }, {
+            where: {
+                id: {
+                    [Op.in]: req.body.solicitacoes
+                }
+            }
+        }).then(() => {
+            console.log('atualizado');
+        })
+})
+
+
 
 // ADD SOLICITAÇÃO(ÕES) ok
 
