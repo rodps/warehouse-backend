@@ -58,7 +58,7 @@ app.use("/estoque", estoqueRouter);
  *  Inicializa o banco de dados
  *  sync({force:true}) Drop tables if exists
  */
-db.sequelize.sync({force:true}).then(() => {
+db.sequelize.sync().then(() => {
   console.log("Nice! Database looks fine");
 }).catch(function (err) {
   console.log(err, "Algo deu errado com a database!");

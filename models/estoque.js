@@ -6,6 +6,7 @@ function associate(models){
     } = models;
     estoque.belongsTo(solicitacoes, { foreignKey:'solicitacao_id' });
     estoque.belongsTo(orcamentos, { foreignKey:'orcamento_id' });
+    estoque.belongsTo(estoque, {foreignKey:'estoque_pai'});
 }
 
 module.exports = function(sequelize , DataTypes){

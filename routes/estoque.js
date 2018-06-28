@@ -8,7 +8,8 @@ var env = process.env.NODE_ENV || "development";
 var config = require("../config/config.json")[env];
 var sequelize = new Sequelize(config);
 
-// RETORNAR UMA LISTA DE SOLICITACOES COM STATUS REQUISTADO
+// RETORNAR UMA LISTA DE SOLICITACOES COM STATUS REQUISTADO "FUNCIONANDO"
+
 router.get("/requisitado", (req, res) => {
 
     db.solicitacao_requisicao
@@ -39,104 +40,86 @@ router.get("/requisitado", (req, res) => {
 
 });
 
-
-//Rota para listar produtos em estoque 
-
-router.get("/emprestimo", (req, res) => {
-    sequelize.query(
-        'SELECT *  FROM movimentacoes as m, solicitacoes as s '+ 
-            'where m.id in '+
-             '(select max(id) as id from database_development.movimentacoes as m2 where m2.solicitacao_id = m.solicitacao_id) '+
-            ' and m.produto_id = p.siorg',
-             { type: sequelize.QueryTypes.SELECT}
-        ).then(produtos =>{
-            res.send(produtos)
+//DAR  BAIXA NO PRODUTO NO ESTOQUE
+router.post("/", (req, res) => {
+    //se é um produto unico entao lancar quantidade 1 por 1 com
+    let p = req.body.solicitacao;
+    if (p.unico) {
+        let produto = {
+            orcamento_id : p.orcamento_id,
+            solicitacao_id : p.solicitacao_id,
+            quantidade : 1,
+        }
+        db.estoque.create(produto).then(sucess => {
+            console.log("Solicitacao única inserida " + sucess)
         }).catch(err => {
-            res.status(400).send("Erro ao tentar listar produtos "+ err)
+            console.log("Não foi possivel inserir o produto" + produto)
+            res.status(400).send("Erro na inserção de Produtos unicos:  " + err)
+        })
+    } else {
+
+        let produto = {
+            orcamento_id : p.orcamento_id,
+            solicitacao_id : p.solicitacao_id,
+            quantidade : p.quantidade,
+        }
+        db.estoque.create(produto).then(sucess => {
+            console.log("Solicitacao inserida " + sucess)
+            res.status(201).send("Inserção de produtos em quantidade feita:  "+ produto)
+        }).catch(err => {
+            console.log("Não foi possivel inserir o produto" + produto)
+            res.status(400).send("Erro na inserção de Produtos unicos:  " + err)
         })
 
-        
-})
-
-
-
-//emprestar produto
-router.post("/emprestimo", (req, res) => {
-    var saida = {}
-    db.movimentacoes.findAll({
-        where: { produto_id: req.body.produto_id },
-        order: Sequelize.literal('id DESC')
-    }).then(produtos => {
-        if (produtos.length > 0) {
-
-            saida = {
-                local: "Em estoque",
-                quantidade_atual: produtos[0].quantidade_atual - req.body.quantidade,
-                quantidade_lancamento: 0,
-                quantidade_anterior: produtos[0].quantidade_atual,
-                produto_id: req.body.produto_id,
-                tipo: "SAIDA"
-            }
-            db.movimentacoes.create(saida)
-            
-        }
-    })
-
+    }
 });
+
+
+// //Rota para listar produtos em estoque 
+// router.get("/emprestimo", (req, res) => {
+//     sequelize.query(
+//         'SELECT *  FROM movimentacoes as m, solicitacoes as s '+ 
+//             'where m.id in '+
+//              '(select max(id) as id from database_development.movimentacoes as m2 where m2.solicitacao_id = m.solicitacao_id) '+
+//             ' and m.produto_id = p.siorg',
+//              { type: sequelize.QueryTypes.SELECT}
+//         ).then(produtos =>{
+//             res.send(produtos)
+//         }).catch(err => {
+//             res.status(400).send("Erro ao tentar listar produtos "+ err)
+//         })
+
+
+// })
+
+
+
+// //emprestar produto
+// router.post("/emprestimo", (req, res) => {
+//     var saida = {}
+//     db.movimentacoes.findAll({
+//         where: { produto_id: req.body.produto_id },
+//         order: Sequelize.literal('id DESC')
+//     }).then(produtos => {
+//         if (produtos.length > 0) {
+
+//             saida = {
+//                 local: "Em estoque",
+//                 quantidade_atual: produtos[0].quantidade_atual - req.body.quantidade,
+//                 quantidade_lancamento: 0,
+//                 quantidade_anterior: produtos[0].quantidade_atual,
+//                 produto_id: req.body.produto_id,
+//                 tipo: "SAIDA"
+//             }
+//             db.movimentacoes.create(saida)
+
+//         }
+//     })
+
+// });
 
 
 //DAR ENTRADA NO PRODUTO NO ESTOQUE
-router.post("/", (req, res) => {
-    var entrada = {}
-    db.movimentacoes.findAll({
-        where: { produto_id: req.body.produto_id },
-        order: Sequelize.literal('id DESC')
-    }).then(produtos => {
-        if (produtos.length > 0) {
-
-            entrada = {
-                local: "Em estoque",
-                quantidade_atual: produtos[0].quantidade_atual + req.body.quantidade,
-                quantidade_lancamento: req.body.quantidade,
-                quantidade_anterior: produtos[0].quantidade_atual,
-                produto_id: req.body.produto_id,
-                tipo: "ENTRADA"
-            }
-        } else {
-
-            entrada = {
-                local: "Em estoque",
-                quantidade_atual: req.body.quantidade,
-                quantidade_lancamento: req.body.quantidade,
-                quantidade_anterior: 0,
-                produto_id: req.body.produto_id,
-                tipo: "ENTRADA"
-            }
-            console.log(entrada)
-
-        }
-
-        db.movimentacoes.create(entrada).then(estoque => {
-            db.solicitacoes.update({
-                status: "COMPRADO",
-            }, {
-                    where: {
-                        id: req.body.solicitacao_id
-                    }
-                }).then(() => {
-                    console.log('atualizado');
-                    res.status(201).json(estoque);
-                })
-
-        }).catch(err => {
-            res.status(400).send("ocorreu um erro na inserção" + err)
-        })
-    }).catch(err => {
-        res.status(400).send("ocorreu um erro na busca" + err)
-    }
-        )
-
-});
 
 
 
