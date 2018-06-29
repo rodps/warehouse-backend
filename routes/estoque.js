@@ -62,7 +62,7 @@ router.get("/requisitado", (req, res) => {
 //DAR  BAIXA NO PRODUTO NO ESTOQUE
 router.post("/", (req, res) => {
     //se é um produto unico entao lancar quantidade 1 por 1 com
-    let p = req.body.solicitacao;
+    let p = req.body;
 
     if (p.unico) {
         
