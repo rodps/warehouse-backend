@@ -12,7 +12,8 @@ function associate(models){
 module.exports = function(sequelize , DataTypes){
     var estoque = sequelize.define('estoque', {
         quantidade: DataTypes.INTEGER,
-        codigo: DataTypes.STRING
+        codigo: DataTypes.STRING,
+        emprestimo: DataTypes.BOOLEAN
     });
 
     estoque.associate = associate;

@@ -9,15 +9,18 @@ var config = require("../config/config.json")[env];
 var sequelize = new Sequelize(config);
 const verifyToken = require("../middleware/index").verifyToken;
 
-router.get('/devolucao',verifyToken,(req,res)=>{
+
+
+
+router.get('/devolucao', verifyToken, (req, res) => {
     db.movimentacoes.findAll({
-        where : {
-            usuario_id :req.dados.usuario.id
+        where: {
+            usuario_id: req.dados.usuario.id
         }
-    }).then(devolucao =>{
+    }).then(devolucao => {
         res.status(200).send(devolucao)
-    }).catch (err =>{
-     res.status(400).send(err)
+    }).catch(err => {
+        res.status(400).send(err)
     })
 })
 
@@ -60,35 +63,66 @@ router.get("/requisitado", (req, res) => {
 router.post("/", (req, res) => {
     //se é um produto unico entao lancar quantidade 1 por 1 com
     let p = req.body.solicitacao;
+
     if (p.unico) {
+        
         let produto = {
-            orcamento_id : p.orcamento_id,
-            solicitacao_id : p.solicitacao_id,
-            quantidade : 1,
+            orcamento_id: p.orcamento_id,
+            solicitacao_id: p.solicitacao_id,
+            quantidade: 1,
+            emprestimo: 0
         }
-        db.estoque.create(produto).then(sucess => {
-            console.log("Solicitacao única inserida " + sucess)
-        }).catch(err => {
-            console.log("Não foi possivel inserir o produto" + produto)
-            res.status(400).send("Erro na inserção de Produtos unicos:  " + err)
-        })
+        for (var index = 0; index < p.quantidade; index++) {
+            
+            db.estoque.create(produto).then(sucess => {
+                console.log("Solicitacao única inserida " + sucess)
+            }).catch(err => {
+                console.log("Não foi possivel inserir o produto" + produto)
+                res.status(400).send("Erro na inserção de Produtos unicos:  " + err)
+            })
+        }
     } else {
-
+    
         let produto = {
-            orcamento_id : p.orcamento_id,
-            solicitacao_id : p.solicitacao_id,
-            quantidade : p.quantidade,
+            orcamento_id: p.orcamento_id,
+            solicitacao_id: p.solicitacao_id,
+            quantidade: p.quantidade,
+            emprestimo : 1
 
         }
+        console.log(produto)
         db.estoque.create(produto).then(sucess => {
             console.log("Solicitacao inserida " + sucess)
-            res.status(201).send("Inserção de produtos em quantidade feita:  "+ produto)
+
         }).catch(err => {
-            console.log("Não foi possivel inserir o produto" + produto)
-            res.status(400).send("Erro na inserção de Produtos unicos:  " + err)
+            //console.log("Não foi possivel inserir o produto montao" + produto)
+            res.status(400).send("Erro na inserção de Produtos:  " + err)
         })
 
     }
+    //VERIFICA SE JÁ CHEGOU TODOS OS CHEGOU
+    db.solicitacoes.findById(p.solicitacao_id).then(quantidadesol => {
+        if (quantidadesol.quantidade - p.quantidade == 0) {
+            db.solicitacoes.update({
+                status: "COMPRADO",
+                quantidade: 0
+            }, {
+                    where: { id: quantidadesol.id }
+                }
+            )
+        } else {
+            db.solicitacoes.update({
+                quantidade: quantidadesol.quantidade - p.quantidade
+            }, {
+                    where: { id: quantidadesol.id }
+                }
+            )
+        }
+    }).catch(error => {
+        res.status(400).send(error)
+    })
+
+    res.status(201).send("Brasil")
 });
 
 
