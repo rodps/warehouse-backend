@@ -1,5 +1,6 @@
 var bCrypt = require("bcrypt");
 var LocalStrategy = require("passport-local").Strategy;
+var Sequelize = require("../models").Sequelize;
 
 passportStrategies = {};
 
@@ -29,7 +30,12 @@ module.exports = function(user) {
       };
 
       User.findOne({
-        where: { nome: name }
+        where: { 
+          [Sequelize.Op.or]: [
+            {nome: name},
+            {email: req.body.email}
+          ]
+        }
       }).then(function(user) {
         if (user) {
           return done(null, false, { message: "Usuário já cadastrado" });
@@ -37,7 +43,9 @@ module.exports = function(user) {
           var userPassword = generateHash(password);
           var data = {
             nome: name,
-            senha: userPassword
+            senha: userPassword,
+            email: req.body.email,
+            departamento: req.body.departamento
           };
           User.create(data).then(function(newUser, created) {
             if (!newUser) return done(null, false);
