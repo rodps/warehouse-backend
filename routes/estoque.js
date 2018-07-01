@@ -125,23 +125,26 @@ router.post("/", (req, res) => {
     res.status(201).send("Brasil")
 });
 
+//Rota para listar produtos em estoque 
+router.get("/emprestimo", (req, res) => {
+    sequelize.query(
+        
+       
+'select s.siorg,s.descricao ,sum(e.quantidade) as quantidade '+
+    'from  database_development.estoques as e '+ 
+        'inner join  database_development.solicitacoes as s on s.id = e.solicitacao_id '+
+    'where emprestimo = 0 '+
+    'group by s.siorg; ',
 
-// //Rota para listar produtos em estoque 
-// router.get("/emprestimo", (req, res) => {
-//     sequelize.query(
-//         'SELECT *  FROM movimentacoes as m, solicitacoes as s '+ 
-//             'where m.id in '+
-//              '(select max(id) as id from database_development.movimentacoes as m2 where m2.solicitacao_id = m.solicitacao_id) '+
-//             ' and m.produto_id = p.siorg',
-//              { type: sequelize.QueryTypes.SELECT}
-//         ).then(produtos =>{
-//             res.send(produtos)
-//         }).catch(err => {
-//             res.status(400).send("Erro ao tentar listar produtos "+ err)
-//         })
+             { type: sequelize.QueryTypes.SELECT}
+        ).then(produtos =>{
+            res.send(produtos)
+        }).catch(err => {
+            res.status(400).send("Erro ao tentar listar produtos "+ err)
+        })
 
 
-// })
+})
 
 
 
