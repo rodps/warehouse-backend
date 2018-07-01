@@ -7,6 +7,10 @@ module.exports = function(sequelize , DataTypes){
         adm: {
         	type: DataTypes.BOOLEAN,
         	defaultValue: false
+        },
+        verificado : {
+            type: DataTypes.BOOLEAN,
+        	defaultValue: false
         }
     });
     
