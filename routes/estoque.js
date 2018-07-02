@@ -194,7 +194,7 @@ router.post("/emprestimo", verifyToken, (req, res) => {
                 quantidade_anterior: produtos[0].quantidade_atual,
                 produto_id: req.body.produto_id,
                 data_movimentacao: Date.now(),
-                estoque_id: sucess.id,
+                estoque_id: req.body.estoque_id,
                 tipo: "SAIDA",
                 usuario_id: req.dados.usuario.id,
 
