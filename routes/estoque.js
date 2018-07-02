@@ -189,8 +189,8 @@ router.post("/emprestimo", verifyToken, (req, res) => {
 
             saida = {
                 local: req.body.local,
-                quantidade_atual: produtos[0].quantidade_atual - req.body.quantidade,
                 quantidade_lancamento: req.body.quantidade * -1,
+                quantidade_atual: produtos[0].quantidade_atual + quantidade_lancamento,
                 quantidade_anterior: produtos[0].quantidade_atual,
                 produto_id: req.body.produto_id,
                 data_movimentacao: Date.now(),
