@@ -22,7 +22,7 @@ router.get("/", (req, res) => {
         'inner join database_development.produtos as produto on produto.siorg = sol.siorg) ' +
         'where m.id = (select MAX(id) ' +
         'from database_development.movimentacoes as m2 ' +
-        ' where m2.id = m.id) and m.quantidade_atual > 0;', {
+        ' where m2.estoque_id = m.estoque_id) and m.quantidade_atual > 0 and e.emprestimo = 1;', {
             type: sequelize.QueryTypes.SELECT
         }
     ).then(estoque => {
