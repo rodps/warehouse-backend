@@ -36,16 +36,30 @@ router.get("/", (req, res) => {
 
 
 
-router.get('/devolucao', verifyToken, (req, res) => {
-    db.movimentacoes.findAll({
-        where: {
-            usuario_id: req.dados.usuario.id
-        }
-    }).then(devolucao => {
-        res.status(200).send(devolucao)
-    }).catch(err => {
-        res.status(400).send(err)
-    })
+router.get('/devolucao', (req, res) => {
+
+    sequelize.query(
+        'SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao ' +
+        'FROM database_development.movimentacoes as m inner join database_development.usuarios as u on m.usuario_id = u.id ' +
+        ' inner join database_development.estoques as e on e.id = m.estoque_id ' +
+        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id ' +
+        'inner join database_development.produtos as pro on sol.siorg = pro.siorg ' +
+        'where m.tipo = "SAIDA" ' +
+        'group by m.usuario_id , m.estoque_id ' +
+        'having m.usuario_id ' +
+        'UNION ' +
+        'SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo,m2.usuario_id, u.nome,pro.descricao ' +
+        'FROM database_development.movimentacoes as m2 inner join database_development.usuarios as u on m2.usuario_id = u.id ' +
+        'inner join database_development.estoques as e on e.id = m2.estoque_id ' +
+        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id ' +
+        'inner join database_development.produtos as pro on sol.siorg = pro.siorg ' +
+        ' where m2.tipo = "ENTRADA" ' +
+        'group by m2.usuario_id ,m2.estoque_id ' +
+        'having m2.usuario_id ;', { type: sequelize.QueryTypes.SELECT }).then(listar => {
+            res.status(200).send(listar)
+
+        })
+
 })
 
 
@@ -106,7 +120,7 @@ router.post("/", verifyToken, (req, res) => {
                     quantidade_lancamento: 1,
                     quantidade_anterior: 0,
                     data_movimentacao: Date.now(),
-                    usuario_id: req.dados.usuario.id,
+                    //usuario_id: req.dados.usuario.id,
                     estoque_id: sucess.id
                 }
                 db.movimentacoes.create(movimentacao).then(movimentacao => {
@@ -136,7 +150,7 @@ router.post("/", verifyToken, (req, res) => {
                 quantidade_lancamento: sucess.quantidade,
                 quantidade_anterior: 0,
                 data_movimentacao: Date.now(),
-                usuario_id: req.dados.usuario.id,
+                //usuario_id: req.dados.usuario.id,
                 estoque_id: sucess.id,
                 tipo: "ENTRADA"
             }
@@ -272,6 +286,39 @@ router.post("/emprestimo", verifyToken, (req, res) => {
 
 
 // })
+
+// select idProduto , sum(s.Saidas) as emprestado
+// from (
+// SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo
+// FROM database_development.movimentacoes as m
+// where m.tipo = "SAIDA"
+// group by m.usuario_id 
+// union 
+// SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo
+// FROM database_development.movimentacoes as m2
+// where m2.tipo = "ENTRADA" 
+// group by m2.usuario_id 
+// ) as s;
+
+
+// SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo, m.usuario_id
+// FROM database_development.movimentacoes as m
+// where m.tipo = "SAIDA"
+// group by m.usuario_id , m.estoque_id
+// having m.usuario_id 
+// UNION
+// SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo,m2.usuario_id
+// FROM database_development.movimentacoes as m2
+// where m2.tipo = "ENTRADA" 
+// group by m2.usuario_id ,m2.estoque_id
+// having m2.usuario_id ;
+
+
+
+
+
+
+
 
 
 module.exports = router;
