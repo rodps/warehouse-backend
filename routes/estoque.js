@@ -22,7 +22,7 @@ router.get("/", (req, res) => {
         'inner join database_development.produtos as produto on produto.siorg = sol.siorg) ' +
         'where m.id = (select MAX(id) ' +
         'from database_development.movimentacoes as m2 ' +
-        ' where m2.id = m.id) and m.quantidade_atual > 0 and quantidade_lancamento > 0 ;', {
+        ' where m2.id = m.id) and m.quantidade_atual > 0;', {
             type: sequelize.QueryTypes.SELECT
         }
     ).then(estoque => {
@@ -190,7 +190,7 @@ router.post("/emprestimo", verifyToken, (req, res) => {
             saida = {
                 local: req.body.local,
                 quantidade_lancamento: req.body.quantidade * -1,
-                quantidade_atual: produtos[0].quantidade_atual + quantidade_lancamento,
+                quantidade_atual: produtos[0].quantidade_atual + req.body.quantidade * -1,
                 quantidade_anterior: produtos[0].quantidade_atual,
                 produto_id: req.body.produto_id,
                 data_movimentacao: Date.now(),
