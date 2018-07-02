@@ -22,7 +22,7 @@ router.get("/", (req, res) => {
         'inner join database_development.produtos as produto on produto.siorg = sol.siorg) ' +
         'where m.id = (select MAX(id) ' +
         'from database_development.movimentacoes as m2 ' +
-        ' where m2.id = m.id);', {
+        ' where m2.id = m.id) and m.quantidade_atual > 0;', {
             type: sequelize.QueryTypes.SELECT
         }
     ).then(estoque => {
@@ -137,7 +137,8 @@ router.post("/", verifyToken, (req, res) => {
                 quantidade_anterior: 0,
                 data_movimentacao: Date.now(),
                 usuario_id: req.dados.usuario.id,
-                estoque_id: sucess.id
+                estoque_id: sucess.id,
+                tipo: "ENTRADA"
             }
             db.movimentacoes.create(movimentacao).then(movimentacao => {
                 console.log("Inserido na movimentação" + movimentacao)
@@ -177,32 +178,37 @@ router.post("/", verifyToken, (req, res) => {
     res.status(201).send("Brasil")
 });
 
+//emprestar produto
+router.post("/emprestimo", verifyToken, (req, res) => {
+    var saida = {}
+    db.movimentacoes.findAll({
+        where: { estoque_id: req.body.estoque_id },
+        order: Sequelize.literal('id DESC')
+    }).then(produtos => {
+        if (produtos.length > 0) {
 
+            saida = {
+                local: req.body.local,
+                quantidade_atual: produtos[0].quantidade_atual - req.body.quantidade,
+                quantidade_lancamento: req.body.quantidade * -1,
+                quantidade_anterior: produtos[0].quantidade_atual,
+                produto_id: req.body.produto_id,
+                data_movimentacao: Date.now(),
+                estoque_id: sucess.id,
+                tipo: "SAIDA",
+                usuario_id: req.dados.usuario.id,
 
+            }
+            db.movimentacoes.create(saida).then(saidaRegistrada => {
+                res.status(201).send(saida)
+            })
 
-// //emprestar produto
-// router.post("/emprestimo", (req, res) => {
-//     var saida = {}
-//     db.movimentacoes.findAll({
-//         where: { produto_id: req.body.produto_id },
-//         order: Sequelize.literal('id DESC')
-//     }).then(produtos => {
-//         if (produtos.length > 0) {
+        } else {
+            res.status(400).send("Produto nao existe")
+        }
+    })
 
-//             saida = {
-//                 local: "Em estoque",
-//                 quantidade_atual: produtos[0].quantidade_atual - req.body.quantidade,
-//                 quantidade_lancamento: 0,
-//                 quantidade_anterior: produtos[0].quantidade_atual,
-//                 produto_id: req.body.produto_id,
-//                 tipo: "SAIDA"
-//             }
-//             db.movimentacoes.create(saida)
-
-//         }
-//     })
-
-// });
+});
 
 
 //DAR ENTRADA NO PRODUTO NO ESTOQUE
