@@ -12,16 +12,54 @@ const verifyToken = require("../middleware/index").verifyToken;
 
 
 
-router.get('/devolucao', verifyToken, (req, res) => {
-    db.movimentacoes.findAll({
-        where: {
-            usuario_id: req.dados.usuario.id
+router.get("/", (req, res) => {
+
+    sequelize.query(
+        ' select produto.descricao as descricao, e.id as estoqueId , m.quantidade_atual as quantidade ' +
+        'from (((database_development.movimentacoes as m ' +
+        'inner join database_development.estoques as e on m.estoque_id = e.id) ' +
+        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id) ' +
+        'inner join database_development.produtos as produto on produto.siorg = sol.siorg) ' +
+        'where m.id = (select MAX(id) ' +
+        'from database_development.movimentacoes as m2 ' +
+        ' where m2.estoque_id = m.estoque_id) and m.quantidade_atual > 0 and e.emprestimo = 1;', {
+            type: sequelize.QueryTypes.SELECT
         }
-    }).then(devolucao => {
-        res.status(200).send(devolucao)
+    ).then(estoque => {
+
+        res.status(200).send(estoque);
     }).catch(err => {
-        res.status(400).send(err)
-    })
+        res.status(400).send(err);
+    });
+});
+
+
+
+
+router.get('/devolucao', (req, res) => {
+
+    sequelize.query(
+        'SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao ' +
+        'FROM database_development.movimentacoes as m inner join database_development.usuarios as u on m.usuario_id = u.id ' +
+        ' inner join database_development.estoques as e on e.id = m.estoque_id ' +
+        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id ' +
+        'inner join database_development.produtos as pro on sol.siorg = pro.siorg ' +
+        'where m.tipo = "SAIDA" ' +
+        'group by m.usuario_id , m.estoque_id ' +
+        'having m.usuario_id ' +
+        'UNION ' +
+        'SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo,m2.usuario_id, u.nome,pro.descricao ' +
+        'FROM database_development.movimentacoes as m2 inner join database_development.usuarios as u on m2.usuario_id = u.id ' +
+        'inner join database_development.estoques as e on e.id = m2.estoque_id ' +
+        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id ' +
+        'inner join database_development.produtos as pro on sol.siorg = pro.siorg ' +
+        ' where m2.tipo = "ENTRADA" ' +
+        'group by m2.usuario_id ,m2.estoque_id ' +
+        'having m2.usuario_id ;', { type: sequelize.QueryTypes.SELECT }).then(listar => {
+            res.status(200).send(listar)
+
+        })
+
 })
 
 
@@ -60,39 +98,68 @@ router.get("/requisitado", (req, res) => {
 });
 
 //DAR  BAIXA NO PRODUTO NO ESTOQUE
-router.post("/", (req, res) => {
+router.post("/", verifyToken, (req, res) => {
     //se é um produto unico entao lancar quantidade 1 por 1 com
     let p = req.body;
 
     if (p.unico) {
-        
+
         let produto = {
             orcamento_id: p.orcamento_id,
             solicitacao_id: p.solicitacao_id,
             quantidade: 1,
             emprestimo: 0
         }
+
         for (var index = 0; index < p.quantidade; index++) {
-            
+
             db.estoque.create(produto).then(sucess => {
-                console.log("Solicitacao única inserida " + sucess)
+                let movimentacao = {
+                    local: 'Em estoque',
+                    quantidade_atual: 1,
+                    quantidade_lancamento: 1,
+                    quantidade_anterior: 0,
+                    data_movimentacao: Date.now(),
+                    //usuario_id: req.dados.usuario.id,
+                    estoque_id: sucess.id
+                }
+                db.movimentacoes.create(movimentacao).then(movimentacao => {
+                    console.log("Inserido na movimentação" + movimentacao)
+                }).catch(err => {
+                    console.log(err);
+                })
             }).catch(err => {
                 console.log("Não foi possivel inserir o produto" + produto)
                 res.status(400).send("Erro na inserção de Produtos unicos:  " + err)
             })
         }
     } else {
-    
+
         let produto = {
             orcamento_id: p.orcamento_id,
             solicitacao_id: p.solicitacao_id,
             quantidade: p.quantidade,
-            emprestimo : 1
+            emprestimo: 1
 
         }
-        console.log(produto)
         db.estoque.create(produto).then(sucess => {
             console.log("Solicitacao inserida " + sucess)
+            let movimentacao = {
+                local: 'Em estoque',
+                quantidade_atual: sucess.quantidade,
+                quantidade_lancamento: sucess.quantidade,
+                quantidade_anterior: 0,
+                data_movimentacao: Date.now(),
+                //usuario_id: req.dados.usuario.id,
+                estoque_id: sucess.id,
+                tipo: "ENTRADA"
+            }
+            db.movimentacoes.create(movimentacao).then(movimentacao => {
+                console.log("Inserido na movimentação" + movimentacao)
+            }).catch(err => {
+                console.log(err);
+            })
+
 
         }).catch(err => {
             //console.log("Não foi possivel inserir o produto montao" + produto)
@@ -125,78 +192,41 @@ router.post("/", (req, res) => {
     res.status(201).send("Brasil")
 });
 
+//emprestar produto
+router.post("/emprestimo", verifyToken, (req, res) => {
+    var saida = {}
+    db.movimentacoes.findAll({
+        where: { estoque_id: req.body.estoque_id },
+        order: Sequelize.literal('id DESC')
+    }).then(produtos => {
+        if (produtos.length > 0) {
 
-// //Rota para listar produtos em estoque 
-// router.get("/emprestimo", (req, res) => {
-//     sequelize.query(
-//         'SELECT *  FROM movimentacoes as m, solicitacoes as s '+ 
-//             'where m.id in '+
-//              '(select max(id) as id from database_development.movimentacoes as m2 where m2.solicitacao_id = m.solicitacao_id) '+
-//             ' and m.produto_id = p.siorg',
-//              { type: sequelize.QueryTypes.SELECT}
-//         ).then(produtos =>{
-//             res.send(produtos)
-//         }).catch(err => {
-//             res.status(400).send("Erro ao tentar listar produtos "+ err)
-//         })
+            saida = {
+                local: req.body.local,
+                quantidade_lancamento: req.body.quantidade * -1,
+                quantidade_atual: produtos[0].quantidade_atual + req.body.quantidade * -1,
+                quantidade_anterior: produtos[0].quantidade_atual,
+                produto_id: req.body.produto_id,
+                data_movimentacao: Date.now(),
+                estoque_id: req.body.estoque_id,
+                tipo: "SAIDA",
+                usuario_id: req.dados.usuario.id,
 
+            }
+            db.movimentacoes.create(saida).then(saidaRegistrada => {
+                res.status(201).send(saida)
+            })
 
-// })
+        } else {
+            res.status(400).send("Produto nao existe")
+        }
+    })
 
-
-
-// //emprestar produto
-// router.post("/emprestimo", (req, res) => {
-//     var saida = {}
-//     db.movimentacoes.findAll({
-//         where: { produto_id: req.body.produto_id },
-//         order: Sequelize.literal('id DESC')
-//     }).then(produtos => {
-//         if (produtos.length > 0) {
-
-//             saida = {
-//                 local: "Em estoque",
-//                 quantidade_atual: produtos[0].quantidade_atual - req.body.quantidade,
-//                 quantidade_lancamento: 0,
-//                 quantidade_anterior: produtos[0].quantidade_atual,
-//                 produto_id: req.body.produto_id,
-//                 tipo: "SAIDA"
-//             }
-//             db.movimentacoes.create(saida)
-
-//         }
-//     })
-
-// });
+});
 
 
 //DAR ENTRADA NO PRODUTO NO ESTOQUE
 
-
-
-/**
- * Estoque
- */
-
-
-
-// router.get("/", (req, res) => {
-
-//     db.sequelize.query(
-//         "SELECT * " +
-//         "FROM movimentacoes as m1 " +
-//         "WHERE m1.createdAt = " +
-//         "( SELECT MAX(createdAt) " +
-//         "FROM movimentacoes as m2 " +
-//         "WHERE m2.id = m1.id )", {
-//             type: sequelize.QueryTypes.SELECT
-//         }
-//     ).then(estoque => {
-//         res.status(200).send(estoque);
-//     }).catch(err => {
-//         res.status(400).send(err);
-//     });
-// });
 
 // /** 
 //  * Movimentacões
@@ -235,6 +265,60 @@ router.post("/", (req, res) => {
 //     });
 
 // });
+//Rota para listar produtos em estoque 
+// router.get("/emprestimo", (req, res) => {
+//     // sequelize.query(
+
+
+//     //     'select s.siorg,s.descricao ,sum(e.quantidade) as quantidade ' +
+//     //     'from  database_development.estoques as e ' +
+//     //     'inner join  database_development.solicitacoes as s on s.id = e.solicitacao_id ' +
+//     //     'where emprestimo = 0 ' +
+//     //     'group by s.siorg; ',
+
+//     //     { type: sequelize.QueryTypes.SELECT }
+
+//     }).then(produtos => {
+//         res.send(produtos)
+//     }).catch(err => {
+//         res.status(400).send("Erro ao tentar listar produtos " + err)
+//     })
+
+
+// })
+
+// select idProduto , sum(s.Saidas) as emprestado
+// from (
+// SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo
+// FROM database_development.movimentacoes as m
+// where m.tipo = "SAIDA"
+// group by m.usuario_id 
+// union 
+// SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo
+// FROM database_development.movimentacoes as m2
+// where m2.tipo = "ENTRADA" 
+// group by m2.usuario_id 
+// ) as s;
+
+
+// SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo, m.usuario_id
+// FROM database_development.movimentacoes as m
+// where m.tipo = "SAIDA"
+// group by m.usuario_id , m.estoque_id
+// having m.usuario_id 
+// UNION
+// SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo,m2.usuario_id
+// FROM database_development.movimentacoes as m2
+// where m2.tipo = "ENTRADA" 
+// group by m2.usuario_id ,m2.estoque_id
+// having m2.usuario_id ;
+
+
+
+
+
+
+
 
 
 module.exports = router;
