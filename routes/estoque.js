@@ -12,6 +12,30 @@ const verifyToken = require("../middleware/index").verifyToken;
 
 
 
+router.get("/", (req, res) => {
+
+    sequelize.query(
+        ' select produto.descricao as descricao, e.id as estoqueId , m.quantidade_atual as quantidade ' +
+        'from (((database_development.movimentacoes as m ' +
+        'inner join database_development.estoques as e on m.estoque_id = e.id) ' +
+        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id) ' +
+        'inner join database_development.produtos as produto on produto.siorg = sol.siorg) ' +
+        'where m.id = (select MAX(id) ' +
+        'from database_development.movimentacoes as m2 ' +
+        ' where m2.id = m.id);', {
+            type: sequelize.QueryTypes.SELECT
+        }
+    ).then(estoque => {
+
+        res.status(200).send(estoque);
+    }).catch(err => {
+        res.status(400).send(err);
+    });
+});
+
+
+
+
 router.get('/devolucao', verifyToken, (req, res) => {
     db.movimentacoes.findAll({
         where: {
@@ -60,39 +84,67 @@ router.get("/requisitado", (req, res) => {
 });
 
 //DAR  BAIXA NO PRODUTO NO ESTOQUE
-router.post("/", (req, res) => {
+router.post("/", verifyToken, (req, res) => {
     //se é um produto unico entao lancar quantidade 1 por 1 com
     let p = req.body;
 
     if (p.unico) {
-        
+
         let produto = {
             orcamento_id: p.orcamento_id,
             solicitacao_id: p.solicitacao_id,
             quantidade: 1,
             emprestimo: 0
         }
+
         for (var index = 0; index < p.quantidade; index++) {
-            
+
             db.estoque.create(produto).then(sucess => {
-                console.log("Solicitacao única inserida " + sucess)
+                let movimentacao = {
+                    local: 'Em estoque',
+                    quantidade_atual: 1,
+                    quantidade_lancamento: 1,
+                    quantidade_anterior: 0,
+                    data_movimentacao: Date.now(),
+                    usuario_id: req.dados.usuario.id,
+                    estoque_id: sucess.id
+                }
+                db.movimentacoes.create(movimentacao).then(movimentacao => {
+                    console.log("Inserido na movimentação" + movimentacao)
+                }).catch(err => {
+                    console.log(err);
+                })
             }).catch(err => {
                 console.log("Não foi possivel inserir o produto" + produto)
                 res.status(400).send("Erro na inserção de Produtos unicos:  " + err)
             })
         }
     } else {
-    
+
         let produto = {
             orcamento_id: p.orcamento_id,
             solicitacao_id: p.solicitacao_id,
             quantidade: p.quantidade,
-            emprestimo : 1
+            emprestimo: 1
 
         }
-        console.log(produto)
         db.estoque.create(produto).then(sucess => {
             console.log("Solicitacao inserida " + sucess)
+            let movimentacao = {
+                local: 'Em estoque',
+                quantidade_atual: sucess.quantidade,
+                quantidade_lancamento: sucess.quantidade,
+                quantidade_anterior: 0,
+                data_movimentacao: Date.now(),
+                usuario_id: req.dados.usuario.id,
+                estoque_id: sucess.id
+            }
+            db.movimentacoes.create(movimentacao).then(movimentacao => {
+                console.log("Inserido na movimentação" + movimentacao)
+            }).catch(err => {
+                console.log(err);
+            })
+
 
         }).catch(err => {
             //console.log("Não foi possivel inserir o produto montao" + produto)
@@ -125,26 +177,6 @@ router.post("/", (req, res) => {
     res.status(201).send("Brasil")
 });
 
-//Rota para listar produtos em estoque 
-router.get("/emprestimo", (req, res) => {
-    sequelize.query(
-        
-       
-'select s.siorg,s.descricao ,sum(e.quantidade) as quantidade '+
-    'from  database_development.estoques as e '+ 
-        'inner join  database_development.solicitacoes as s on s.id = e.solicitacao_id '+
-    'where emprestimo = 0 '+
-    'group by s.siorg; ',
-
-             { type: sequelize.QueryTypes.SELECT}
-        ).then(produtos =>{
-            res.send(produtos)
-        }).catch(err => {
-            res.status(400).send("Erro ao tentar listar produtos "+ err)
-        })
-
-
-})
 
 
 
@@ -175,31 +207,6 @@ router.get("/emprestimo", (req, res) => {
 
 //DAR ENTRADA NO PRODUTO NO ESTOQUE
 
-
-
-/**
- * Estoque
- */
-
-
-
-// router.get("/", (req, res) => {
-
-//     db.sequelize.query(
-//         "SELECT * " +
-//         "FROM movimentacoes as m1 " +
-//         "WHERE m1.createdAt = " +
-//         "( SELECT MAX(createdAt) " +
-//         "FROM movimentacoes as m2 " +
-//         "WHERE m2.id = m1.id )", {
-//             type: sequelize.QueryTypes.SELECT
-//         }
-//     ).then(estoque => {
-//         res.status(200).send(estoque);
-//     }).catch(err => {
-//         res.status(400).send(err);
-//     });
-// });
 
 // /** 
 //  * Movimentacões
@@ -238,6 +245,27 @@ router.get("/emprestimo", (req, res) => {
 //     });
 
 // });
+//Rota para listar produtos em estoque 
+// router.get("/emprestimo", (req, res) => {
+//     // sequelize.query(
+
+
+//     //     'select s.siorg,s.descricao ,sum(e.quantidade) as quantidade ' +
+//     //     'from  database_development.estoques as e ' +
+//     //     'inner join  database_development.solicitacoes as s on s.id = e.solicitacao_id ' +
+//     //     'where emprestimo = 0 ' +
+//     //     'group by s.siorg; ',
+
+//     //     { type: sequelize.QueryTypes.SELECT }
+
+//     }).then(produtos => {
+//         res.send(produtos)
+//     }).catch(err => {
+//         res.status(400).send("Erro ao tentar listar produtos " + err)
+//     })
+
+
+// })
 
 
 module.exports = router;
