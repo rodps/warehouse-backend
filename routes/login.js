@@ -6,7 +6,7 @@ var middleware = require("../middleware");
 var jwt = require('jsonwebtoken');
 
 router.get("/", (req, res) => {
-  res.send("padrao")
+  res.send(req.dados);
   
 })
 
@@ -37,7 +37,6 @@ router.post("/login",
     });
   }
 );
-
 
 router.get("/logout", (req, res) => {
   req.session.destroy(err => {
