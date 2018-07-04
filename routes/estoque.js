@@ -75,6 +75,18 @@ router.get('/devolucao', (req, res) => {
 
 })
 
+router.get("/historicoUsuario", verifyToken, (req, res) => {
+    sequelize.query(
+        'select p.descricao as descricao,tipo as tipo,data_movimentacao as data,m.quantidade_lancamento as quantidade,m.id as id' +
+        'from database_development.movimentacoes m inner join database_development.estoques e on m.estoque_id = e.id ' +
+        'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
+        'inner join database_development.produtos as p on s.siorg = p.siorg ' +
+        'where m.usuario_id = ' + req.body.usuario_id
+        , { type: sequelize.QueryTypes.SELECT }).then(listar => {
+
+        })
+})
+
 //devolver produto
 router.post("/devolucao", verifyToken, (req, res) => {
     var entrada = {}
