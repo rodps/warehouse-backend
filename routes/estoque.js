@@ -76,7 +76,7 @@ router.get('/devolucao', (req, res) => {
 })
 router.get("/historicoProduto/:id", (req, res) => {
     sequelize.query(
-        'select tipo as tipo,data_movimentacao as data,m.id as id, u.nome as nome ' +
+        'select tipo as tipo,data_movimentacao as data,m.id as id, u.nome as nome ,m.quantidade_lancamento ' +
         'from database_development.movimentacoes m inner join database_development.estoques e on m.estoque_id = e.id ' +
         'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
         'inner join database_development.usuarios as u on u.id = s.usuario_id ' +
@@ -84,6 +84,9 @@ router.get("/historicoProduto/:id", (req, res) => {
         , { type: sequelize.QueryTypes.SELECT }).then(listar => {
             for (var index = 0; index < listar.length; index++) {
                 listar[index].data = moment(listar[index].data).format('ll')
+                if(listar[index].quantidade_lancamento < 0){
+                    listar[index].quantidade_lancamento*= -1
+                }
 
             }
             res.status(200).send(listar)
