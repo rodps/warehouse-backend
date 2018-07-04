@@ -83,6 +83,12 @@ router.get("/historicoUsuario", verifyToken, (req, res) => {
         'inner join database_development.produtos as p on s.siorg = p.siorg ' +
         'where m.usuario_id = ' + req.dados.usuario.id
         , { type: sequelize.QueryTypes.SELECT }).then(listar => {
+            for (var index = 0; index < listar.length; index++) {
+                listar[index].data = moment(listar[0].data).format('ll')
+                if(listar[index].quantidade < 0)
+                    listar[index].quantidade*=-1;
+                
+            }
             res.status(200).send(listar)
         }).catch (err => {
             res.status(400).send(err);
