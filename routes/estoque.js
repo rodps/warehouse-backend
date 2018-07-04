@@ -58,11 +58,17 @@ router.get('/devolucao', (req, res) => {
         'inner join database_development.produtos as pro on sol.siorg = pro.siorg ' +
         'where m2.tipo = "ENTRADA" ' +
         'group by m2.usuario_id ,m2.estoque_id  ' +
-        'having m2.usuario_id ) as n where Saidas != 0  ', { type: sequelize.QueryTypes.SELECT }).then(listar => {
-            
-            if(listar[0].Saidas < 0){
-                listar[0].Saidas*= -1;
+        'having m2.usuario_id ) as n ' +
+        ' group by n.IdProduto , usuario_id having Saidas != 0 '
+        , { type: sequelize.QueryTypes.SELECT }).then(listar => {
+
+            for (let index = 0; index < listar.length; index++) {
+                if (listar[index].Saidas < 0) {
+                    listar[index].Saidas *= -1;
+                }
+
             }
+
             res.status(200).send(listar)
 
         })
@@ -71,7 +77,7 @@ router.get('/devolucao', (req, res) => {
 
 //devolver produto
 router.post("/devolucao", verifyToken, (req, res) => {
-  var entrada = {}
+    var entrada = {}
     db.movimentacoes.findAll({
         where: { estoque_id: req.body.estoque_id },
         order: Sequelize.literal('id DESC')
@@ -80,12 +86,12 @@ router.post("/devolucao", verifyToken, (req, res) => {
 
             entrada = {
                 quantidade_lancamento: req.body.quantidade,
-                quantidade_atual: produtos[0].quantidade_atual + req.body.quantidade ,
+                quantidade_atual: produtos[0].quantidade_atual + req.body.quantidade,
                 quantidade_anterior: produtos[0].quantidade_atual,
                 data_movimentacao: Date.now(),
                 estoque_id: req.body.estoque_id,
                 tipo: "ENTRADA",
-                usuario_id: req.dados.usuario.id,
+                usuario_id: req.body.usuario_id,
 
             }
             db.movimentacoes.create(entrada).then(saidaRegistrada => {
@@ -97,7 +103,7 @@ router.post("/devolucao", verifyToken, (req, res) => {
         }
     })
 
-      
+
 });
 
 
