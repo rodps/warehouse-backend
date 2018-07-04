@@ -80,12 +80,12 @@ router.get("/historicoProduto/:id", (req, res) => {
         'from database_development.movimentacoes m inner join database_development.estoques e on m.estoque_id = e.id ' +
         'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
         'inner join database_development.usuarios as u on u.id = s.usuario_id ' +
-        'where m.estoque_id = ' +  req.params.id
+        'where m.estoque_id = ' + req.params.id
         , { type: sequelize.QueryTypes.SELECT }).then(listar => {
             for (var index = 0; index < listar.length; index++) {
                 listar[index].data = moment(listar[index].data).format('ll')
-                if(listar[index].quantidade_lancamento < 0){
-                    listar[index].quantidade_lancamento*= -1
+                if (listar[index].quantidade_lancamento < 0) {
+                    listar[index].quantidade_lancamento *= -1
                 }
 
             }
@@ -94,13 +94,13 @@ router.get("/historicoProduto/:id", (req, res) => {
             res.status(400).send(err);
         })
 })
-    router.get("/detalhesProduto/:id", (req, res) => {
+router.get("/detalhesProduto/:id", (req, res) => {
     sequelize.query(
-     'select u.nome as nome,p.descricao as descricao,e.createdAt as data,e.id as id , s.mediaOrcamento as valor ' +
+        'select u.nome as nome,p.descricao as descricao,e.createdAt as data,e.id as id , s.mediaOrcamento as valor ' +
         'from database_development.estoques e ' +
         'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
         'inner join database_development.produtos as p on s.siorg = p.siorg ' +
-        'inner join database_development.usuarios as u on s.usuario_id = u.id  '+
+        'inner join database_development.usuarios as u on s.usuario_id = u.id  ' +
         'where e.id = ' + req.params.id
         , { type: sequelize.QueryTypes.SELECT }).then(listar => {
             for (var index = 0; index < listar.length; index++) {
@@ -113,6 +113,19 @@ router.get("/historicoProduto/:id", (req, res) => {
         })
 })
 
+router.get("/orcamento/:id", (req, res) => {
+    db.estoque.findById(req.params.id).then(produto => {
+        db.orcamentos.findById(produto.orcamento_id).then(orcamento => {
+            res.status(200).send(orcamento)
+        }).catch(err => {
+            res.status(400).send("Erro ao buscar pelo id do orcamento " + Err)
+        })
+    }).catch(err =>{
+    res.status(400).send("Erro ao buscar o produto " + Err)
+
+    })
+
+})
 
 
 router.get("/historicoUsuario", verifyToken, (req, res) => {
