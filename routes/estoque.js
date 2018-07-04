@@ -91,6 +91,25 @@ router.get("/historicoProduto/:id", (req, res) => {
             res.status(400).send(err);
         })
 })
+    router.get("/detalhesProduto/:id", (req, res) => {
+    sequelize.query(
+     'select u.nome as nome,p.descricao as descricao,e.createdAt as data,e.id as id ' +
+        'from database_development.estoques e ' +
+        'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
+        'inner join database_development.produtos as p on s.siorg = p.siorg ' +
+        'inner join database_development.usuarios as u on s.usuario_id = u.id  '+
+        'where e.id = ' + req.params.id
+        , { type: sequelize.QueryTypes.SELECT }).then(listar => {
+            for (var index = 0; index < listar.length; index++) {
+                listar[index].data = moment(listar[index].data).format('ll')
+
+            }
+            res.status(200).send(listar)
+        }).catch(err => {
+            res.status(400).send(err);
+        })
+})
+
 
 
 router.get("/historicoUsuario", verifyToken, (req, res) => {
