@@ -39,24 +39,24 @@ router.get("/", (req, res) => {
 router.get('/devolucao', (req, res) => {
 
     sequelize.query(
-        'select   n.IdProduto as IdProduto, Saidas*-1 as Saidas , usuario_id , nome,descricao  '+
-'from '+
-'(SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao  '+
-        'FROM database_development.movimentacoes as m inner join database_development.usuarios as u on m.usuario_id = u.id  '+
-         'inner join database_development.estoques as e on e.id = m.estoque_id  '+
-        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id '+
-        'inner join database_development.produtos as pro on sol.siorg = pro.siorg  '+
-        'where m.tipo = "SAIDA"  '+
-        'group by m.usuario_id , m.estoque_id  '+
-        'having m.usuario_id  '+
-        'UNION  '+
-        'SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo,m2.usuario_id, u.nome,pro.descricao  '+
-        'FROM database_development.movimentacoes as m2 inner join database_development.usuarios as u on m2.usuario_id = u.id  '+
-        'inner join database_development.estoques as e on e.id = m2.estoque_id  '+
-        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id  '+
-        'inner join database_development.produtos as pro on sol.siorg = pro.siorg '+
-        'where m2.tipo = "ENTRADA" '+
-        'group by m2.usuario_id ,m2.estoque_id  '+
+        'select   n.IdProduto as IdProduto, Saidas*-1 as Saidas , usuario_id , nome,descricao  ' +
+        'from ' +
+        '(SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao  ' +
+        'FROM database_development.movimentacoes as m inner join database_development.usuarios as u on m.usuario_id = u.id  ' +
+        'inner join database_development.estoques as e on e.id = m.estoque_id  ' +
+        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id ' +
+        'inner join database_development.produtos as pro on sol.siorg = pro.siorg  ' +
+        'where m.tipo = "SAIDA"  ' +
+        'group by m.usuario_id , m.estoque_id  ' +
+        'having m.usuario_id  ' +
+        'UNION  ' +
+        'SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo,m2.usuario_id, u.nome,pro.descricao  ' +
+        'FROM database_development.movimentacoes as m2 inner join database_development.usuarios as u on m2.usuario_id = u.id  ' +
+        'inner join database_development.estoques as e on e.id = m2.estoque_id  ' +
+        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id  ' +
+        'inner join database_development.produtos as pro on sol.siorg = pro.siorg ' +
+        'where m2.tipo = "ENTRADA" ' +
+        'group by m2.usuario_id ,m2.estoque_id  ' +
         'having m2.usuario_id ) as n;', { type: sequelize.QueryTypes.SELECT }).then(listar => {
             res.status(200).send(listar)
 
@@ -64,6 +64,36 @@ router.get('/devolucao', (req, res) => {
 
 })
 
+//devolver produto
+router.post("/devolucao", verifyToken, (req, res) => {
+  var entrada = {}
+    db.movimentacoes.findAll({
+        where: { estoque_id: req.body.estoque_id },
+        order: Sequelize.literal('id DESC')
+    }).then(produtos => {
+        if (produtos.length > 0) {
+
+            entrada = {
+                quantidade_lancamento: req.body.quantidade,
+                quantidade_atual: produtos[0].quantidade_atual + req.body.quantidade ,
+                quantidade_anterior: produtos[0].quantidade_atual,
+                data_movimentacao: Date.now(),
+                estoque_id: req.body.estoque_id,
+                tipo: "ENTRADA",
+                usuario_id: req.dados.usuario.id,
+
+            }
+            db.movimentacoes.create(saida).then(saidaRegistrada => {
+                res.status(201).send(saida)
+            })
+
+        } else {
+            res.status(400).send("Produto nao existe")
+        }
+    })
+
+      
+});
 
 
 
@@ -208,7 +238,6 @@ router.post("/emprestimo", verifyToken, (req, res) => {
                 quantidade_lancamento: req.body.quantidade * -1,
                 quantidade_atual: produtos[0].quantidade_atual + req.body.quantidade * -1,
                 quantidade_anterior: produtos[0].quantidade_atual,
-                produto_id: req.body.produto_id,
                 data_movimentacao: Date.now(),
                 estoque_id: req.body.estoque_id,
                 tipo: "SAIDA",
