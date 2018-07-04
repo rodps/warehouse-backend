@@ -120,11 +120,35 @@ router.get("/orcamento/:id", (req, res) => {
         }).catch(err => {
             res.status(400).send("Erro ao buscar pelo id do orcamento " + Err)
         })
-    }).catch(err =>{
-    res.status(400).send("Erro ao buscar o produto " + Err)
+    }).catch(err => {
+        res.status(400).send("Erro ao buscar o produto " + Err)
 
     })
 
+})
+
+router.get("/validarProduto", (req, res) => {
+    db.estoque.findAll({
+        where: { emprestimo: 0 }
+    }).then(produtos => {
+        res.status(200).send(produtos)
+    }).catch(err => {
+        res.status(400).send("Não foi possivel Procurar pelos produtos" + err)
+    })
+})
+router.post("/validarProdutos", (req, res) => {
+    db.estoque.update({
+         codigo: req.body.codigo,
+         emprestimo : 1
+    }, {
+            where: {
+                id : req.body.id
+            }
+        }).then(update => {
+            res.status(200).send("Codigo de barra inserido "+ update)
+    }).catch(err => {
+        res.status(400).send("Não foi possivel inserir o codigo de barras"+ err)
+    })
 })
 
 
