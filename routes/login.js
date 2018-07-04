@@ -4,10 +4,10 @@ var models = require("../models");
 var passport = require("passport");
 var middleware = require("../middleware");
 var jwt = require('jsonwebtoken');
+const verifyToken = require("../middleware").verifyToken;
 
-router.get("/", (req, res) => {
-  res.send(req.dados);
-  
+router.get("/", verifyToken, (req, res) => {
+  res.send(req.dados.usuario);
 })
 
 router.post("/signup",
@@ -33,6 +33,7 @@ router.post("/login",
         nome : req.user.nome,
 
       }
+      req.dados = ret;
       res.status(201).json(ret)
     });
   }
