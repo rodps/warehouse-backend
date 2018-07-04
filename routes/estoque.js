@@ -74,6 +74,24 @@ router.get('/devolucao', (req, res) => {
         })
 
 })
+router.get("/historicoProduto/:id", (req, res) => {
+    sequelize.query(
+        'select tipo as tipo,data_movimentacao as data,m.id as id, u.nome as nome ' +
+        'from database_development.movimentacoes m inner join database_development.estoques e on m.estoque_id = e.id ' +
+        'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
+        'inner join database_development.usuarios as u on u.id = s.usuario_id ' +
+        'where m.estoque_id = ' +  req.params.id
+        , { type: sequelize.QueryTypes.SELECT }).then(listar => {
+            for (var index = 0; index < listar.length; index++) {
+                listar[index].data = moment(listar[index].data).format('ll')
+
+            }
+            res.status(200).send(listar)
+        }).catch(err => {
+            res.status(400).send(err);
+        })
+})
+
 
 router.get("/historicoUsuario", verifyToken, (req, res) => {
     sequelize.query(
@@ -85,12 +103,12 @@ router.get("/historicoUsuario", verifyToken, (req, res) => {
         , { type: sequelize.QueryTypes.SELECT }).then(listar => {
             for (var index = 0; index < listar.length; index++) {
                 listar[index].data = moment(listar[index].data).format('ll')
-                if(listar[index].quantidade < 0)
-                    listar[index].quantidade*=-1;
-                
+                if (listar[index].quantidade < 0)
+                    listar[index].quantidade *= -1;
+
             }
             res.status(200).send(listar)
-        }).catch (err => {
+        }).catch(err => {
             res.status(400).send(err);
         })
 })
