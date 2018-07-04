@@ -39,7 +39,7 @@ router.get("/", (req, res) => {
 router.get('/devolucao', (req, res) => {
 
     sequelize.query(
-        'select   n.IdProduto as IdProduto, Saidas*-1 as Saidas , usuario_id , nome,descricao  ' +
+        'select   n.IdProduto as IdProduto, sum(Saidas) as Saidas , usuario_id , nome,descricao  ' +
         'from ' +
         '(SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao  ' +
         'FROM database_development.movimentacoes as m inner join database_development.usuarios as u on m.usuario_id = u.id  ' +
@@ -57,7 +57,7 @@ router.get('/devolucao', (req, res) => {
         'inner join database_development.produtos as pro on sol.siorg = pro.siorg ' +
         'where m2.tipo = "ENTRADA" ' +
         'group by m2.usuario_id ,m2.estoque_id  ' +
-        'having m2.usuario_id ) as n;', { type: sequelize.QueryTypes.SELECT }).then(listar => {
+        'having m2.usuario_id ) as n ', { type: sequelize.QueryTypes.SELECT }).then(listar => {
             res.status(200).send(listar)
 
         })
@@ -83,8 +83,8 @@ router.post("/devolucao", verifyToken, (req, res) => {
                 usuario_id: req.dados.usuario.id,
 
             }
-            db.movimentacoes.create(saida).then(saidaRegistrada => {
-                res.status(201).send(saida)
+            db.movimentacoes.create(entrada).then(saidaRegistrada => {
+                res.status(201).send(entrada)
             })
 
         } else {
