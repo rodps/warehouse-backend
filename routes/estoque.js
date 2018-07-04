@@ -81,9 +81,11 @@ router.get("/historicoUsuario", verifyToken, (req, res) => {
         'from database_development.movimentacoes m inner join database_development.estoques e on m.estoque_id = e.id ' +
         'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
         'inner join database_development.produtos as p on s.siorg = p.siorg ' +
-        'where m.usuario_id = ' + req.body.usuario_id
+        'where m.usuario_id = ' + req.dados.usuario.id
         , { type: sequelize.QueryTypes.SELECT }).then(listar => {
             res.status(200).send(listar)
+        }).catch (err => {
+            res.send(400).send(err);
         })
 })
 
