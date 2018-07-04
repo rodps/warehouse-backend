@@ -93,7 +93,7 @@ router.get("/historicoProduto/:id", (req, res) => {
 })
     router.get("/detalhesProduto/:id", (req, res) => {
     sequelize.query(
-     'select u.nome as nome,p.descricao as descricao,e.createdAt as data,e.id as id ' +
+     'select u.nome as nome,p.descricao as descricao,e.createdAt as data,e.id as id , s.mediaOrcamento as valor ' +
         'from database_development.estoques e ' +
         'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
         'inner join database_development.produtos as p on s.siorg = p.siorg ' +
