@@ -84,7 +84,7 @@ router.get("/historicoUsuario", verifyToken, (req, res) => {
         'where m.usuario_id = ' + req.dados.usuario.id
         , { type: sequelize.QueryTypes.SELECT }).then(listar => {
             for (var index = 0; index < listar.length; index++) {
-                listar[index].data = moment(listar[0].data).format('ll')
+                listar[index].data = moment(listar[index].data).format('ll')
                 if(listar[index].quantidade < 0)
                     listar[index].quantidade*=-1;
                 
