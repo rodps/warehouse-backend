@@ -15,7 +15,7 @@ const verifyToken = require("../middleware/index").verifyToken;
 router.get("/", (req, res) => {
 
     sequelize.query(
-        ' select produto.descricao as descricao, e.id as estoqueId , m.quantidade_atual as quantidade ' +
+        ' select produto.descricao as descricao, e.id as estoqueId, e.codigo , m.quantidade_atual as quantidade ' +
         'from (((database_development.movimentacoes as m ' +
         'inner join database_development.estoques as e on m.estoque_id = e.id) ' +
         'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id) ' +
@@ -39,29 +39,174 @@ router.get("/", (req, res) => {
 router.get('/devolucao', (req, res) => {
 
     sequelize.query(
-        'SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao ' +
-        'FROM database_development.movimentacoes as m inner join database_development.usuarios as u on m.usuario_id = u.id ' +
-        ' inner join database_development.estoques as e on e.id = m.estoque_id ' +
+
+        'select   n.IdProduto as IdProduto, sum(n.Saidas) as Saidas , usuario_id  nome,descricao,codigo  ' +
+        'from ' +
+        '(SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas,e.codigo , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao  ' +
+        'FROM database_development.movimentacoes as m inner join database_development.usuarios as u on m.usuario_id = u.id  ' +
+        'inner join database_development.estoques as e on e.id = m.estoque_id  ' +
         'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id ' +
+        'inner join database_development.produtos as pro on sol.siorg = pro.siorg  ' +
+        'where m.tipo = "SAIDA"  ' +
+        'group by m.usuario_id , m.estoque_id  ' +
+        'having m.usuario_id  ' +
+        'UNION  ' +
+        'SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas ,e.codigo, m2.tipo as tipo,m2.usuario_id, u.nome,pro.descricao  ' +
+        'FROM database_development.movimentacoes as m2 inner join database_development.usuarios as u on m2.usuario_id = u.id  ' +
+        'inner join database_development.estoques as e on e.id = m2.estoque_id  ' +
+        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id  ' +
         'inner join database_development.produtos as pro on sol.siorg = pro.siorg ' +
-        'where m.tipo = "SAIDA" ' +
-        'group by m.usuario_id , m.estoque_id ' +
-        'having m.usuario_id ' +
-        'UNION ' +
-        'SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo,m2.usuario_id, u.nome,pro.descricao ' +
-        'FROM database_development.movimentacoes as m2 inner join database_development.usuarios as u on m2.usuario_id = u.id ' +
-        'inner join database_development.estoques as e on e.id = m2.estoque_id ' +
-        'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id ' +
-        'inner join database_development.produtos as pro on sol.siorg = pro.siorg ' +
-        ' where m2.tipo = "ENTRADA" ' +
-        'group by m2.usuario_id ,m2.estoque_id ' +
-        'having m2.usuario_id ;', { type: sequelize.QueryTypes.SELECT }).then(listar => {
+        'where m2.tipo = "ENTRADA" ' +
+        'group by m2.usuario_id ,m2.estoque_id  ' +
+        'having m2.usuario_id ) as n ' +
+        ' group by n.IdProduto , usuario_id having Saidas != 0 '
+        , { type: sequelize.QueryTypes.SELECT }).then(listar => {
+
+            for (let index = 0; index < listar.length; index++) {
+                if (listar[index].Saidas < 0) {
+                    listar[index].Saidas *= -1;
+                }
+
+            }
+
             res.status(200).send(listar)
 
         })
 
 })
+router.get("/historicoProduto/:id", (req, res) => {
+    sequelize.query(
+        'select tipo as tipo,data_movimentacao as data,m.id as id, u.nome as nome ,m.quantidade_lancamento ' +
+        'from database_development.movimentacoes m inner join database_development.estoques e on m.estoque_id = e.id ' +
+        'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
+        'inner join database_development.usuarios as u on u.id = s.usuario_id ' +
+        'where m.estoque_id = ' + req.params.id
+        , { type: sequelize.QueryTypes.SELECT }).then(listar => {
+            for (var index = 0; index < listar.length; index++) {
+                listar[index].data = moment(listar[index].data).format('ll')
+                if (listar[index].quantidade_lancamento < 0) {
+                    listar[index].quantidade_lancamento *= -1
+                }
 
+            }
+            res.status(200).send(listar)
+        }).catch(err => {
+            res.status(400).send(err);
+        })
+})
+router.get("/detalhesProduto/:id", (req, res) => {
+    sequelize.query(
+        'select u.nome as nome,p.descricao as descricao,e.createdAt as data,e.id as id , s.mediaOrcamento as valor ' +
+        'from database_development.estoques e ' +
+        'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
+        'inner join database_development.produtos as p on s.siorg = p.siorg ' +
+        'inner join database_development.usuarios as u on s.usuario_id = u.id  ' +
+        'where e.id = ' + req.params.id
+        , { type: sequelize.QueryTypes.SELECT }).then(listar => {
+            for (var index = 0; index < listar.length; index++) {
+                listar[index].data = moment(listar[index].data).format('ll')
+
+            }
+            res.status(200).send(listar)
+        }).catch(err => {
+            res.status(400).send(err);
+        })
+})
+
+router.get("/orcamento/:id", (req, res) => {
+    db.estoque.findById(req.params.id).then(produto => {
+        db.orcamentos.findById(produto.orcamento_id).then(orcamento => {
+            res.status(200).send(orcamento)
+        }).catch(err => {
+            res.status(400).send("Erro ao buscar pelo id do orcamento " + Err)
+        })
+    }).catch(err => {
+        res.status(400).send("Erro ao buscar o produto " + Err)
+
+    })
+
+})
+
+router.get("/validarProduto", (req, res) => {
+
+    sequelize.query(
+        'SELECT p.descricao , e.id as id ' +
+        'FROM database_development.estoques as e ' +
+        'inner join database_development.solicitacoes s on s.id = e.solicitacao_id ' +
+        'inner join database_development.produtos p on p.siorg = s.siorg ' +
+        'where  e.emprestimo = 0;'
+        , { type: sequelize.QueryTypes.SELECT }).then(produtos => {
+            res.status(200).send(produtos)
+        }).catch(err => {
+            res.status(400).send("Não foi possivel Procurar pelos produtos" + err)
+        })
+})
+router.post("/validarProdutos", (req, res) => {
+    db.estoque.update({
+        codigo: req.body.codigo,
+        emprestimo: 1
+    }, {
+            where: {
+                id: req.body.id
+            }
+        }).then(update => {
+            res.status(200).send("Codigo de barra inserido " + update)
+        }).catch(err => {
+            res.status(400).send("Não foi possivel inserir o codigo de barras" + err)
+        })
+})
+
+
+router.get("/historicoUsuario", verifyToken, (req, res) => {
+    sequelize.query(
+        'select p.descricao as descricao,tipo as tipo,data_movimentacao as data,m.quantidade_lancamento as quantidade,m.id as id ' +
+        'from database_development.movimentacoes m inner join database_development.estoques e on m.estoque_id = e.id ' +
+        'inner join database_development.solicitacoes as s on e.solicitacao_id = s.id ' +
+        'inner join database_development.produtos as p on s.siorg = p.siorg ' +
+        'where m.usuario_id = ' + req.dados.usuario.id
+        , { type: sequelize.QueryTypes.SELECT }).then(listar => {
+            for (var index = 0; index < listar.length; index++) {
+                listar[index].data = moment(listar[index].data).format('ll')
+                if (listar[index].quantidade < 0)
+                    listar[index].quantidade *= -1;
+
+            }
+            res.status(200).send(listar)
+        }).catch(err => {
+            res.status(400).send(err);
+        })
+})
+
+//devolver produto
+router.post("/devolucao", verifyToken, (req, res) => {
+    var entrada = {}
+    db.movimentacoes.findAll({
+        where: { estoque_id: req.body.estoque_id },
+        order: Sequelize.literal('id DESC')
+    }).then(produtos => {
+        if (produtos.length > 0) {
+
+            entrada = {
+                quantidade_lancamento: req.body.quantidade,
+                quantidade_atual: produtos[0].quantidade_atual + req.body.quantidade,
+                quantidade_anterior: produtos[0].quantidade_atual,
+                data_movimentacao: Date.now(),
+                estoque_id: req.body.estoque_id,
+                tipo: "ENTRADA",
+                usuario_id: req.body.usuario_id,
+
+            }
+            db.movimentacoes.create(entrada).then(saidaRegistrada => {
+                res.status(201).send(entrada)
+            })
+
+        } else {
+            res.status(400).send("Produto nao existe")
+        }
+    })
+
+
+});
 
 
 
@@ -206,7 +351,6 @@ router.post("/emprestimo", verifyToken, (req, res) => {
                 quantidade_lancamento: req.body.quantidade * -1,
                 quantidade_atual: produtos[0].quantidade_atual + req.body.quantidade * -1,
                 quantidade_anterior: produtos[0].quantidade_atual,
-                produto_id: req.body.produto_id,
                 data_movimentacao: Date.now(),
                 estoque_id: req.body.estoque_id,
                 tipo: "SAIDA",
@@ -312,13 +456,6 @@ router.post("/emprestimo", verifyToken, (req, res) => {
 // where m2.tipo = "ENTRADA" 
 // group by m2.usuario_id ,m2.estoque_id
 // having m2.usuario_id ;
-
-
-
-
-
-
-
 
 
 module.exports = router;
