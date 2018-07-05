@@ -15,7 +15,7 @@ const verifyToken = require("../middleware/index").verifyToken;
 router.get("/", (req, res) => {
 
     sequelize.query(
-        ' select produto.descricao as descricao, e.id as estoqueId , m.quantidade_atual as quantidade ' +
+        ' select produto.descricao as descricao, e.id as estoqueId, e.codigo , m.quantidade_atual as quantidade ' +
         'from (((database_development.movimentacoes as m ' +
         'inner join database_development.estoques as e on m.estoque_id = e.id) ' +
         'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id) ' +
@@ -40,9 +40,9 @@ router.get('/devolucao', (req, res) => {
 
     sequelize.query(
 
-        'select   n.IdProduto as IdProduto, sum(n.Saidas) as Saidas , usuario_id , nome,descricao  ' +
+        'select   n.IdProduto as IdProduto, sum(n.Saidas) as Saidas , usuario_id  nome,descricao,codigo  ' +
         'from ' +
-        '(SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao  ' +
+        '(SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas,e.codigo , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao  ' +
         'FROM database_development.movimentacoes as m inner join database_development.usuarios as u on m.usuario_id = u.id  ' +
         'inner join database_development.estoques as e on e.id = m.estoque_id  ' +
         'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id ' +
@@ -51,7 +51,7 @@ router.get('/devolucao', (req, res) => {
         'group by m.usuario_id , m.estoque_id  ' +
         'having m.usuario_id  ' +
         'UNION  ' +
-        'SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas , m2.tipo as tipo,m2.usuario_id, u.nome,pro.descricao  ' +
+        'SELECT m2.estoque_id as IdProduto, sum(m2.quantidade_lancamento) as Saidas ,e.codigo, m2.tipo as tipo,m2.usuario_id, u.nome,pro.descricao  ' +
         'FROM database_development.movimentacoes as m2 inner join database_development.usuarios as u on m2.usuario_id = u.id  ' +
         'inner join database_development.estoques as e on e.id = m2.estoque_id  ' +
         'inner join database_development.solicitacoes as sol on sol.id = e.solicitacao_id  ' +
