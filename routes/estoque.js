@@ -33,9 +33,6 @@ router.get("/", (req, res) => {
     });
 });
 
-
-
-
 router.get('/devolucao', (req, res) => {
 
     sequelize.query(
@@ -66,9 +63,7 @@ router.get('/devolucao', (req, res) => {
                 if (listar[index].Saidas < 0) {
                     listar[index].Saidas *= -1;
                 }
-
             }
-
             res.status(200).send(listar)
 
         })
@@ -87,7 +82,6 @@ router.get("/historicoProduto/:id", (req, res) => {
                 if (listar[index].quantidade_lancamento < 0) {
                     listar[index].quantidade_lancamento *= -1
                 }
-
             }
             res.status(200).send(listar)
         }).catch(err => {
@@ -105,7 +99,6 @@ router.get("/detalhesProduto/:id", (req, res) => {
         , { type: sequelize.QueryTypes.SELECT }).then(listar => {
             for (var index = 0; index < listar.length; index++) {
                 listar[index].data = moment(listar[index].data).format('ll')
-
             }
             res.status(200).send(listar)
         }).catch(err => {
@@ -122,13 +115,11 @@ router.get("/orcamento/:id", (req, res) => {
         })
     }).catch(err => {
         res.status(400).send("Erro ao buscar o produto " + Err)
-
     })
 
 })
 
 router.get("/validarProduto", (req, res) => {
-
     sequelize.query(
         'SELECT p.descricao , e.id as id ' +
         'FROM database_development.estoques as e ' +
@@ -155,8 +146,6 @@ router.post("/validarProdutos", (req, res) => {
             res.status(400).send("Não foi possivel inserir o codigo de barras" + err)
         })
 })
-
-
 router.get("/historicoUsuario", verifyToken, (req, res) => {
     sequelize.query(
         'select p.descricao as descricao,tipo as tipo,data_movimentacao as data,m.quantidade_lancamento as quantidade,m.id as id ' +
@@ -169,7 +158,6 @@ router.get("/historicoUsuario", verifyToken, (req, res) => {
                 listar[index].data = moment(listar[index].data).format('ll')
                 if (listar[index].quantidade < 0)
                     listar[index].quantidade *= -1;
-
             }
             res.status(200).send(listar)
         }).catch(err => {
@@ -194,7 +182,6 @@ router.post("/devolucao", verifyToken, (req, res) => {
                 estoque_id: req.body.estoque_id,
                 tipo: "ENTRADA",
                 usuario_id: req.body.usuario_id,
-
             }
             db.movimentacoes.create(entrada).then(saidaRegistrada => {
                 res.status(201).send(entrada)
@@ -204,11 +191,7 @@ router.post("/devolucao", verifyToken, (req, res) => {
             res.status(400).send("Produto nao existe")
         }
     })
-
-
 });
-
-
 
 // RETORNAR UMA LISTA DE SOLICITACOES COM STATUS REQUISTADO "FUNCIONANDO"
 

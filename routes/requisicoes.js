@@ -156,7 +156,7 @@ router.post("/:idRequisicao/solicitacoes", (req, res) => {
     let solicitacoes = req.body.solicitacoes;
     solicitacoes.forEach(solicitacao_id => {
         lista.push({
-            requisicao_id: req.params.id,
+            requisicao_id: req.params.idRequisicao,
             solicitacao_id: solicitacao_id,
         })
     })
