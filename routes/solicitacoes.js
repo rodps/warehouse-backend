@@ -52,7 +52,7 @@ router.get("/requisicao", verifyToken, (req, res) => {
         where: { id: Sequelize.col('usuario_id') },
         attributes: ['nome']
       }],
-      where: { [Sequelize.Op.or]: [{ status: "DESERTO" }, { status: "APROVADO" }, { status: "ABERTO" }], }
+      where: { [Sequelize.Op.or]: [{ status: "DESERTO" }, { status: "APROVADO" }], }
     })
     .then(solicitacoes => {
       let lista = [];
