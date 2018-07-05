@@ -1,14 +1,27 @@
 var express = require("express");
 var router = express.Router();
-var models = require("../models");
+var db = require("../models");
 var passport = require("passport");
-var middleware = require("../middleware");
 var jwt = require('jsonwebtoken');
 const verifyToken = require("../middleware").verifyToken;
 
 router.get("/", verifyToken, (req, res) => {
   res.send(req.dados.usuario);
 })
+
+router.get("/users", verifyToken, (req, res) => {
+  db.usuarios.findAll().then(users => {
+    res.status(200).send(users);
+  })
+})
+
+router.put("/verify/:id", verifyToken, (req, res) => {
+  db.usuarios.update(req.body, {
+    where: {id: req.params.id}
+  }).then(() => {
+    res.sendStatus(200);
+  });
+});
 
 router.post("/signup",
   passport.authenticate("local-signup", {
