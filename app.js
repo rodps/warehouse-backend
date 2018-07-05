@@ -32,15 +32,15 @@ app.use(cors());
 moment.locale('pt-br');
 
 //passport config
-app.use(
-  session({
-    secret: "keyboard cat",
-    resave: true,
-    saveUninitialized: true
-  })
-);
+// app.use(
+//   session({
+//     secret: "keyboard cat",
+//     resave: true,
+//     saveUninitialized: true
+//   })
+// );
 app.use(passport.initialize());
-app.use(passport.session()); // persistent login sessions
+// app.use(passport.session()); // persistent login sessions
 passport.use("local-signup", passportStrategies.localSignup);
 passport.use("local-signin", passportStrategies.localSignin);
 passport.serializeUser(passportStrategies.serialize);

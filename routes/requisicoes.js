@@ -218,7 +218,7 @@ router.delete("/:id/solicitacoes/:idSolicitacaoRequisicao", (req, res) => {
         .catch(err => { res.status(400).send(err) })
 })
 */
-router.delete('/:req_id/solicitacao/:id', function (req, res) {
+router.delete('/excluir/solicitacao/:id', function (req, res) {
     models.solicitacoes.update({
         status: "APROVADO",
     }, {
@@ -229,36 +229,12 @@ router.delete('/:req_id/solicitacao/:id', function (req, res) {
             console.log('Status ATUALIZADO');
         })
 
-    models.solicitacao_requisicao.update({
-        removido: true
-    }, {
-        where: {
-            solicitacao_id: req.params.id,
-            requisicao_id: req.params.req_id
-        }
+    models.solicitacao_requisicao.destroy({
+        where: { solicitacao_id: req.params.id }
     }).then(() => {
-        models.solicitacao_requisicao.count({
-            where: {
-                solicitacao_id: req.params.id
-            }
-        }).then(result => {
-            if (result >= 3) {
-                models.solicitacoes.update({
-                    status: 'DESERTO'
-                }, {
-                    where: {solicitacao_id: req.params.id}
-                }).then(sol => {
-                    console.log("solicitacao "+ sol.id + " em deserto");
-                }).catch(err => {
-                    console.log(err);
-                })
-            }
-        }).catch(err => {
-            console.log(err);
-        })
-        console.log('solicitacao _requisicao cancelada');
+        console.log('solicitacao _ requisicao remolvida');
     })
-    res.status(201).send("Solicitacao removida");
+    res.status(201).send("Solicitacao remolvida");
 });
 
 module.exports = router;
