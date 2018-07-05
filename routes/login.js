@@ -9,13 +9,13 @@ router.get("/", verifyToken, (req, res) => {
   res.send(req.dados.usuario);
 })
 
-router.get("/users", verifyToken, (req, res) => {
+router.get("/users", (req, res) => {
   db.usuarios.findAll().then(users => {
     res.status(200).send(users);
   })
 })
 
-router.put("/verify/:id", verifyToken, (req, res) => {
+router.put("/:id", (req, res) => {
   db.usuarios.update(req.body, {
     where: {id: req.params.id}
   }).then(() => {
@@ -23,11 +23,19 @@ router.put("/verify/:id", verifyToken, (req, res) => {
   });
 });
 
-router.post("/signup",
-  passport.authenticate("local-signup", {
-    successRedirect: "/",
-    failureRedirect: "/signup"
+router.get("/:id", (req, res) => {
+  db.usuarios.findById(req.params.id).then(user => {
+    res.status(200).json(user);
+  }).catch(err => {
+    res.status(400).json(err);
   })
+});
+
+router.post("/signup",
+  passport.authenticate("local-signup"),
+  (req, res) => {
+    res.sendStatus(201);
+  }
 );
 
 router.post("/login",
