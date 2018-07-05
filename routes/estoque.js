@@ -40,7 +40,7 @@ router.get('/devolucao', (req, res) => {
 
     sequelize.query(
 
-        'select   n.IdProduto as IdProduto, sum(n.Saidas) as Saidas , usuario_id  nome,descricao,codigo  ' +
+        'select   n.IdProduto as IdProduto, sum(n.Saidas) as Saidas , usuario_id,  nome,descricao,codigo  ' +
         'from ' +
         '(SELECT m.estoque_id as IdProduto, sum(m.quantidade_lancamento) as Saidas,e.codigo , m.tipo as tipo, m.usuario_id , u.nome,pro.descricao  ' +
         'FROM database_development.movimentacoes as m inner join database_development.usuarios as u on m.usuario_id = u.id  ' +
