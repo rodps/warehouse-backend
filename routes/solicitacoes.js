@@ -217,7 +217,8 @@ router.put("/:id", (req, res) => {
           justificativa: req.body.justificativa,
           quantidade: req.body.quantidade,
           siorg: req.body.siorg,
-          feedback: req.body.feedback
+          feedback: req.body.feedback,
+          mediaOrcamento: req.body.mediaOrcamento
         })
         .then(solicitacaoEditada => {
           res.status(200).send(solicitacaoEditada);

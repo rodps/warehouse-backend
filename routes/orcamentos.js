@@ -22,7 +22,7 @@ router.get("/:idSolicitacao", verifyToken, function(req, res) {
 router.post("/:idSolicitacao", (req, res) => {
   //var orcamentos = req.body;
   // console.log(orcamentos);
-  console.log(req.body.id);
+
   if (!req.body.id) {
     models.orcamentos
       .create({
