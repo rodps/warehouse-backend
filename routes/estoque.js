@@ -128,27 +128,32 @@ router.get("/orcamento/:id", (req, res) => {
 })
 
 router.get("/validarProduto", (req, res) => {
-    db.estoque.findAll({
-        where: { emprestimo: 0 }
-    }).then(produtos => {
-        res.status(200).send(produtos)
-    }).catch(err => {
-        res.status(400).send("Não foi possivel Procurar pelos produtos" + err)
-    })
+
+    sequelize.query(
+        'SELECT p.descricao , e.id as id ' +
+        'FROM database_development.estoques as e ' +
+        'inner join database_development.solicitacoes s on s.id = e.solicitacao_id ' +
+        'inner join database_development.produtos p on p.siorg = s.siorg ' +
+        'where  e.emprestimo = 0;'
+        , { type: sequelize.QueryTypes.SELECT }).then(produtos => {
+            res.status(200).send(produtos)
+        }).catch(err => {
+            res.status(400).send("Não foi possivel Procurar pelos produtos" + err)
+        })
 })
 router.post("/validarProdutos", (req, res) => {
     db.estoque.update({
-         codigo: req.body.codigo,
-         emprestimo : 1
+        codigo: req.body.codigo,
+        emprestimo: 1
     }, {
             where: {
-                id : req.body.id
+                id: req.body.id
             }
         }).then(update => {
-            res.status(200).send("Codigo de barra inserido "+ update)
-    }).catch(err => {
-        res.status(400).send("Não foi possivel inserir o codigo de barras"+ err)
-    })
+            res.status(200).send("Codigo de barra inserido " + update)
+        }).catch(err => {
+            res.status(400).send("Não foi possivel inserir o codigo de barras" + err)
+        })
 })
 
 
