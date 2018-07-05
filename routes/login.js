@@ -38,14 +38,21 @@ router.post("/login",
 );
 
 router.get("/users", (req, res) => {
-  db.usuarios.findAll().then(users => {
+  models.usuarios.findAll().then(users => {
     res.status(200).send(users);
   })
 });
 
+router.put("/:id", (req, res) => {
+  models.usuarios.update(req.body, {
+    where: {id: req.params.id}
+  }).then(() => {
+    res.sendStatus(200);
+  });
+});
 
 router.get("/users/unverified", (req, res) => {
-  db.usuarios.findAll({
+  models.usuarios.findAll({
     where: {verificado: false}
   }).then(users => {
     res.status(200).send(users);
