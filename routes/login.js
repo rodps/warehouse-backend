@@ -15,6 +15,14 @@ router.get("/users", (req, res) => {
   })
 })
 
+router.get("/users/unverified", (req, res) => {
+  db.usuarios.findAll({
+    where: {verificado: false}
+  }).then(users => {
+    res.status(200).send(users);
+  })
+})
+
 router.put("/:id", (req, res) => {
   db.usuarios.update(req.body, {
     where: {id: req.params.id}
