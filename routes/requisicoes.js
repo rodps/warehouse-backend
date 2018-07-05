@@ -26,7 +26,7 @@ router.get("/", verifyTokenAdm, (req, res) => {
                     nome: element.nome,
                     numero: element.numero,
                     id: element.id,
-                    data: moment(element.createdAt).format('ll')
+                    data: moment(element.createdAt).format('ll'),   
                 })
 
             });
@@ -98,9 +98,10 @@ router.get("/:id", (req, res) => {
                     status: solicitacoes[i].solicitaco.status,
                     justificativa: solicitacoes[i].solicitaco.justificativa,
                     id: solicitacoes[i].solicitaco.id,
-                    data: moment(solicitacoes[i].solicitaco.createdAt).format('ll')
-
+                    data: moment(solicitacoes[i].solicitaco.createdAt).format('ll'),
+                    orcamento: solicitacoes[i].solicitaco.mediaOrcamento 
                 })
+                
             }
             res.status(200).json(lista);
             //res.status(200).json(solicitacoes[0]);

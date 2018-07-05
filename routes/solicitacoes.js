@@ -218,14 +218,7 @@ router.put("/:id", (req, res) => {
     .findById(req.params.id)
     .then(solicitacao => {
       solicitacao
-        .update({
-          status: req.body.status,
-          descricao: req.body.descricao,
-          justificativa: req.body.justificativa,
-          quantidade: req.body.quantidade,
-          siorg: req.body.siorg,
-          feedback: req.body.feedback
-        })
+        .update(req.body)
         .then(solicitacaoEditada => {
           res.status(200).send(solicitacaoEditada);
         })
