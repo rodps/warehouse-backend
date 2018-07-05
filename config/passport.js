@@ -81,9 +81,6 @@ module.exports = function(user) {
           if (!isValidPassword(user.senha, password))
             return done(null, false, { message: "Senha incorreta." });
 
-          if (!user.verificado)
-            return done(null, false, { message: "Usuário não verificado." });
-
           var userinfo = user.get();
           return done(null, userinfo);
         })
