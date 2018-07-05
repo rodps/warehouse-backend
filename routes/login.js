@@ -1,41 +1,20 @@
 var express = require("express");
 var router = express.Router();
-var db = require("../models");
+var models = require("../models");
 var passport = require("passport");
+var middleware = require("../middleware");
 var jwt = require('jsonwebtoken');
-const verifyToken = require("../middleware").verifyToken;
 
-router.get("/", verifyToken, (req, res) => {
-  res.send(req.dados.usuario);
+router.get("/", (req, res) => {
+  res.send("padrao")
+  
 })
-
-router.get("/users", (req, res) => {
-  db.usuarios.findAll().then(users => {
-    res.status(200).send(users);
-  })
-})
-
-router.put("/:id", (req, res) => {
-  db.usuarios.update(req.body, {
-    where: {id: req.params.id}
-  }).then(() => {
-    res.sendStatus(200);
-  });
-});
-
-router.get("/:id", (req, res) => {
-  db.usuarios.findById(req.params.id).then(user => {
-    res.status(200).json(user);
-  }).catch(err => {
-    res.status(400).json(err);
-  })
-});
 
 router.post("/signup",
-  passport.authenticate("local-signup"),
-  (req, res) => {
-    res.sendStatus(201);
-  }
+  passport.authenticate("local-signup", {
+    successRedirect: "/",
+    failureRedirect: "/signup"
+  })
 );
 
 router.post("/login",
@@ -53,27 +32,25 @@ router.post("/login",
         isAdm : req.user.adm,
         nome : req.user.nome,
       }
-      req.dados = ret;
       res.status(201).json(ret)
     });
   }
 );
 
 router.get("/users", (req, res) => {
-  models.usuarios.findAll().then(users => {
+  db.usuarios.findAll().then(users => {
     res.status(200).send(users);
   })
-})
+});
 
 
 router.get("/users/unverified", (req, res) => {
-  models.usuarios.findAll({
+  db.usuarios.findAll({
     where: {verificado: false}
   }).then(users => {
     res.status(200).send(users);
   })
-})
-
+});
 
 router.get("/logout", (req, res) => {
   req.session.destroy(err => {
