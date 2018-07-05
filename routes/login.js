@@ -52,13 +52,28 @@ router.post("/login",
         token : token,
         isAdm : req.user.adm,
         nome : req.user.nome,
-
       }
       req.dados = ret;
       res.status(201).json(ret)
     });
   }
 );
+
+router.get("/users", (req, res) => {
+  models.usuarios.findAll().then(users => {
+    res.status(200).send(users);
+  })
+})
+
+
+router.get("/users/unverified", (req, res) => {
+  models.usuarios.findAll({
+    where: {verificado: false}
+  }).then(users => {
+    res.status(200).send(users);
+  })
+})
+
 
 router.get("/logout", (req, res) => {
   req.session.destroy(err => {
