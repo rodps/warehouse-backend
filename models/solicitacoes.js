@@ -16,6 +16,7 @@ module.exports = function(sequelize, DataTypes) {
         "CANCELADO"
       ),
       quantidade: DataTypes.INTEGER,
+      mediaOrcamento : DataTypes.FLOAT,
       justificativa: DataTypes.STRING(500),
       feedback: DataTypes.STRING(1000)
   });

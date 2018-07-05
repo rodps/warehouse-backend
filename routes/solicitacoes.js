@@ -54,11 +54,7 @@ router.get("/requisicao", verifyToken, (req, res) => {
         }
       ],
       where: {
-        [Sequelize.Op.or]: [
-          { status: "DESERTO" },
-          { status: "APROVADO" },
-          { status: "ABERTO" }
-        ]
+        [Sequelize.Op.or]: [{ status: "DESERTO" }, { status: "APROVADO" }]
       }
     })
     .then(solicitacoes => {
